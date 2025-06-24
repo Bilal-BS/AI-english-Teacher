@@ -142,5 +142,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
 
+  // Translation API endpoints
+  app.post('/api/translate', async (req, res) => {
+    try {
+      const { text, targetLanguage, prompt } = req.body;
+      
+      if (!text || !targetLanguage || !prompt) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Try OpenAI translation first
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          const result = await getCorrectedConversation(prompt, []);
+          res.json({ translation: result.trim() });
+          return;
+        } catch (error) {
+          console.error('OpenAI translation error:', error);
+        }
+      }
+
+      // Fallback translations
+      const fallbackTranslations: Record<string, Record<string, string>> = {
+        tamil: {
+          'Good job!': 'நல்லது!',
+          'Try again': 'மீண்டும் முயற்சிக்கவும்',
+          'Correct': 'சரி',
+          'Grammar error': 'இலக்கண பிழை',
+          'Well done!': 'சிறப்பாக செய்தீர்கள்!',
+          'Keep practicing': 'தொடர்ந்து பயிற்சி செய்யுங்கள்',
+          'That sounds interesting!': 'அது சுவாரஸ்யமாக தெரிகிறது!',
+          'What happened next?': 'அதற்கு பிறகு என்ன நடந்தது?',
+          'How did you feel?': 'உங்களுக்கு எப்படி உணர்வு ஏற்பட்டது?'
+        },
+        sinhala: {
+          'Good job!': 'හොඳයි!',
+          'Try again': 'නැවත උත්සාහ කරන්න',
+          'Correct': 'නිවැරදියි',
+          'Grammar error': 'ව්‍යාකරණ දෝෂයක්',
+          'Well done!': 'හොඳින් කළා!',
+          'Keep practicing': 'දිගටම පුහුණු වන්න',
+          'That sounds interesting!': 'ඒක සිත්ගන්නවා!',
+          'What happened next?': 'ඊළඟට මොනවද වුණේ?',
+          'How did you feel?': 'ඔයාට මොන හැඟීමක් ආවද?'
+        }
+      };
+
+      const translation = fallbackTranslations[targetLanguage]?.[text] || text;
+      res.json({ translation });
+    } catch (error) {
+      console.error('Translation error:', error);
+      res.status(500).json({ error: 'Translation failed' });
+    }
+  });
+
+  app.post('/api/bilingual-correction', async (req, res) => {
+    try {
+      const { userInput, targetLanguage, prompt } = req.body;
+      
+      if (!userInput || !targetLanguage || !prompt) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Try OpenAI bilingual correction
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          const result = await getCorrectedConversation(prompt, []);
+          
+          const corrected = result?.match(/Corrected:\s*(.+)/i)?.[1]?.trim() || userInput;
+          const englishExplanation = result?.match(/English Explanation:\s*(.+)/i)?.[1]?.trim() || 'No corrections needed';
+          const nativeExplanation = result?.match(new RegExp(`${targetLanguage === 'tamil' ? 'Tamil' : 'Sinhala'} Explanation:\\s*(.+)`, 'i'))?.[1]?.trim() || 'No corrections needed';
+          const reply = result?.match(/Reply:\s*(.+)/i)?.[1]?.trim() || 'Great!';
+
+          res.json({
+            corrected,
+            englishExplanation,
+            nativeExplanation,
+            reply
+          });
+          return;
+        } catch (error) {
+          console.error('OpenAI bilingual correction error:', error);
+        }
+      }
+
+      // Fallback bilingual corrections
+      const input = userInput.toLowerCase();
+      let corrected = userInput;
+      let englishExplanation = 'No corrections needed';
+      let nativeExplanation = 'No corrections needed';
+
+      // Apply basic corrections
+      if (input.includes('i go') && input.includes('yesterday')) {
+        corrected = userInput.replace(/i go/gi, 'I went');
+        englishExplanation = 'Changed "go" to "went" for past tense with "yesterday"';
+        nativeExplanation = targetLanguage === 'tamil' 
+          ? '"நேற்று" உடன் "go" ஐ "went" ஆக மாற்றினேன்'
+          : '"ඊයේ" සමග "go" "went" බවට වෙනස් කළා';
+      } else if (input.includes('he go') || input.includes('she go')) {
+        corrected = userInput.replace(/he go/gi, 'he goes').replace(/she go/gi, 'she goes');
+        englishExplanation = 'Added "s" to verb for third person singular';
+        nativeExplanation = targetLanguage === 'tamil'
+          ? 'மூன்றாம் நபர் ஒருமைக்கு வினைச்சொல்லில் "s" சேர்த்தேன்'
+          : 'තුන්වන පුද්ගලයා සඳහා ක්‍රියාපදයට "s" එකතු කළා';
+      }
+
+      const responses = [
+        'That sounds great!',
+        'Tell me more about that.',
+        'How interesting!',
+        'What do you think about it?'
+      ];
+      const reply = responses[Math.floor(Math.random() * responses.length)];
+
+      res.json({
+        corrected,
+        englishExplanation,
+        nativeExplanation,
+        reply
+      });
+    } catch (error) {
+      console.error('Bilingual correction error:', error);
+      res.status(500).json({ error: 'Bilingual correction failed' });
+    }
+  });
+
   return httpServer;
 }

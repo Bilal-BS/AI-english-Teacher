@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Volume2, Send, RotateCcw, CheckCircle, X, MessageCircle, Bot, User, BookOpen, Settings, ArrowRight, Heart } from 'lucide-react';
 import { speechRecognition, SpeechRecognitionResult } from '../utils/speechRecognition';
 import { openaiService, ChatMessage } from '../utils/openaiService';
+import { translationService, BilingualCorrection } from '../utils/translationService';
 
 interface ConversationPracticeProps {
   onClose: () => void;
@@ -48,8 +49,10 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
   const [conversationScore, setConversationScore] = useState(0);
   const [turnCount, setTurnCount] = useState(0);
   const [showCorrections, setShowCorrections] = useState(true);
-  const [isGettingCorrection, setIsGettingCorrection] = useState(false);
   const [autoCorrectEnabled, setAutoCorrectEnabled] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState<'tamil' | 'sinhala' | null>(null);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [isGettingCorrection, setIsGettingCorrection] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const conversationTopics = [
@@ -180,31 +183,50 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
       if (autoCorrectEnabled) {
         setIsGettingCorrection(true);
         try {
-          const response = await fetch('/api/conversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              userInput: content,
-              conversationHistory 
-            })
-          });
-          
-          const result = await response.json();
-          aiResponse = result.reply;
-          corrections = {
-            hasErrors: result.hasCorrections,
-            correctedText: result.corrected,
-            corrections: result.hasCorrections ? [{
-              original: content,
-              corrected: result.corrected,
-              explanation: "Grammar and spelling improvements",
-              type: 'grammar' as const
-            }] : [],
-            encouragement: "Great job practicing! Keep going.",
-            grammarScore: result.hasCorrections ? 85 : 95
-          };
+          if (selectedLanguage) {
+            // Use bilingual correction
+            const bilingualResult = await translationService.getBilingualCorrection(content, selectedLanguage);
+            aiResponse = "Great! " + (await translationService.translateText("Keep practicing!", selectedLanguage)).translatedText;
+            corrections = {
+              hasErrors: bilingualResult.correctedEnglish !== content,
+              correctedText: bilingualResult.correctedEnglish,
+              corrections: bilingualResult.correctedEnglish !== content ? [{
+                original: content,
+                corrected: bilingualResult.correctedEnglish,
+                explanation: `${bilingualResult.explanationEnglish}\n\n${selectedLanguage === 'tamil' ? 'தமிழில்' : 'සිංහලෙන්'}: ${bilingualResult.explanationNative}`,
+                type: 'grammar' as const
+              }] : [],
+              encouragement: translationService.getFallbackPhrase("Well done!", selectedLanguage),
+              grammarScore: bilingualResult.correctedEnglish !== content ? 85 : 95
+            };
+          } else {
+            // Regular auto-correction
+            const response = await fetch('/api/conversation', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                userInput: content,
+                conversationHistory 
+              })
+            });
+            
+            const result = await response.json();
+            aiResponse = result.reply;
+            corrections = {
+              hasErrors: result.hasCorrections,
+              correctedText: result.corrected,
+              corrections: result.hasCorrections ? [{
+                original: content,
+                corrected: result.corrected,
+                explanation: "Grammar and spelling improvements",
+                type: 'grammar' as const
+              }] : [],
+              encouragement: "Great job practicing! Keep going.",
+              grammarScore: result.hasCorrections ? 85 : 95
+            };
+          }
         } catch (error) {
           console.error('Error with auto-correction:', error);
           aiResponse = generateFallbackResponse(content, conversationTopic);

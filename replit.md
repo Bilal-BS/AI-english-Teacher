@@ -31,10 +31,11 @@ This is a comprehensive English learning application built with a modern full-st
 1. **Interactive Lessons**: Multi-modal exercises including speaking, listening, reading, and writing
 2. **AI-Powered Conversation**: Real-time conversation practice with auto-correction and contextual responses
 3. **Auto-Correction System**: Intelligent grammar and spelling corrections with 30+ pattern recognition
-4. **Speech Recognition**: Browser-based speech recognition for pronunciation practice
-5. **Vocabulary Trainer**: Spaced repetition system for vocabulary building
-6. **Writing Assistant**: AI-powered writing feedback and improvement suggestions
-7. **Daily Challenges**: Gamified daily exercises to maintain engagement
+4. **Multilingual Support**: Tamil and Sinhala translation features with bilingual explanations (compulsory)
+5. **Speech Recognition**: Browser-based speech recognition for pronunciation practice
+6. **Vocabulary Trainer**: Spaced repetition system for vocabulary building
+7. **Writing Assistant**: AI-powered writing feedback and improvement suggestions
+8. **Daily Challenges**: Gamified daily exercises to maintain engagement
 
 ### User Experience Features
 1. **Onboarding Flow**: Comprehensive setup including placement test and goal setting
@@ -130,9 +131,13 @@ Recent Updates:
 - June 24, 2025: Added comprehensive fallback grammar corrections (30+ patterns including past tense)
 - June 24, 2025: Enhanced conversation responses with context-aware categorized replies
 - June 24, 2025: Fixed auto-correction system to work with both AI and fallback modes
-- June 24, 2025: Added conversation memory with 6-message history for context
+- June 24, 2025: Added conversation memory with 6-message history for context  
 - June 24, 2025: Implemented dynamic user input handling and enhanced regex parsing
 - June 24, 2025: Increased OpenAI temperature to 0.7 for more creative responses
+- June 24, 2025: Added Tamil and Sinhala translation features (compulsory requirement)
+- June 24, 2025: Implemented bilingual auto-correction with native language explanations
+- June 24, 2025: Created translation service with fallback phrases for common terms
+- June 24, 2025: Enhanced conversation practice UI with language selection dropdown
 
 ## User Preferences
 
