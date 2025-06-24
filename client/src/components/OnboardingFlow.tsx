@@ -179,15 +179,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             onChange={(e) => {
               const newName = e.target.value;
               updateFormData({ name: newName });
-              if (newName.trim()) {
-                validateName(newName);
-              } else {
-                setNameError('');
-              }
             }}
             onBlur={() => {
               if (formData.name.trim()) {
                 validateName(formData.name);
+              } else {
+                setNameError('');
               }
             }}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
