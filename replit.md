@@ -122,6 +122,9 @@ Recent Updates:
 - June 24, 2025: Fixed browser environment errors and map() undefined issues
 - June 24, 2025: Added intelligent basic error detection for common grammar mistakes
 - June 24, 2025: Created beautiful auto-correction UI with original vs corrected text display
+- June 24, 2025: Fixed OpenAI auto-correction implementation with proper prompt formatting
+- June 24, 2025: Updated response parsing to use "Corrected:" and "Reply:" format
+- June 24, 2025: Enhanced API key access for Replit environment configuration
 
 ## User Preferences
 

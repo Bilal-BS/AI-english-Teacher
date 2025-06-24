@@ -1,0 +1,81 @@
+🔧 1. Check the API Prompt
+Make sure the prompt you're sending to OpenAI clearly asks for correction and reply. It should look like this:
+
+ts
+Copy
+Edit
+const prompt = `
+You are an English tutor. Your job is to:
+1. Correct any grammar or spelling mistakes in the user's input.
+2. Then reply naturally like in a conversation.
+
+Use this format:
+Corrected: <corrected input>
+Reply: <natural reply>
+`;
+Don’t just send the raw user message. Append the user input to the prompt like this:
+
+ts
+Copy
+Edit
+const fullPrompt = `${prompt}\n\nUser: ${userInput}`;
+🧠 2. Parse the AI Response Correctly
+Ensure your code extracts both Corrected: and Reply: from the response:
+
+ts
+Copy
+Edit
+const lines = aiResponse.split('\n');
+const correctedLine = lines.find(line => line.startsWith("Corrected:"))?.replace("Corrected:", "").trim();
+const replyLine = lines.find(line => line.startsWith("Reply:"))?.replace("Reply:", "").trim();
+✅ Then display both in your component.
+
+💬 3. Frontend Display Check
+Make sure the correctedLine is not being hidden or overwritten. Here’s a working JSX snippet:
+
+tsx
+Copy
+Edit
+{corrected && (
+  <div className="mb-2 text-green-700">
+    <strong>Corrected:</strong> {corrected}
+  </div>
+)}
+{reply && (
+  <div className="mb-2 text-blue-700">
+    <strong>Reply:</strong> {reply}
+  </div>
+)}
+🔐 4. OpenAI Response Consistency
+Sometimes OpenAI might skip Corrected: if not forced. You can enforce response formatting like this:
+
+ts
+Copy
+Edit
+const systemMessage = {
+  role: "system",
+  content: "You are a helpful English tutor. Always correct grammar/spelling and then reply like a conversation partner. Use this exact format:\nCorrected: ...\nReply: ..."
+};
+🧪 5. Example Working Request (Full)
+ts
+Copy
+Edit
+const response = await openai.createChatCompletion({
+  model: "gpt-4",
+  messages: [
+    systemMessage,
+    { role: "user", content: `He go to market yestarday.` }
+  ],
+  temperature: 0.6
+});
+Expected Response:
+
+vbnet
+Copy
+Edit
+Corrected: He went to the market yesterday.
+Reply: That sounds nice! What did he buy from the market?
+✅ Final Suggestion
+If you want, paste your OpenAI call function and how you're parsing the result, and I can quickly correct it for you.
+
+Let me know your setup (React, Next.js, Replit, etc.) and I’ll tailor it exactly.

@@ -2,8 +2,10 @@ import OpenAI from 'openai';
 
 // Get API key from environment
 const getApiKey = () => {
-  // Check both Vite env and window object for Replit secrets
-  const envKey = import.meta.env.VITE_OPENAI_API_KEY;
+  // Try multiple sources for the API key
+  const envKey = import.meta.env.VITE_OPENAI_API_KEY || 
+                 import.meta.env.OPENAI_API_KEY ||
+                 (typeof process !== 'undefined' && process.env?.OPENAI_API_KEY);
   
   if (envKey && envKey.length > 10 && envKey.startsWith('sk-')) {
     return envKey;
@@ -67,51 +69,59 @@ export class OpenAIService {
         };
       }
 
-      const prompt = `You are a friendly English teacher helping users improve spoken English.
+      const systemMessage = {
+        role: 'system' as const,
+        content: `You are a helpful English tutor. Always correct grammar/spelling and then reply like a conversation partner. Use this exact format:
+Corrected: ...
+Reply: ...`
+      };
 
-1. First, correct any grammar or spelling mistakes in the user's sentence.
-2. Then, reply naturally as if you're having a conversation with the user.
-3. Respond in the following JSON format:
+      const fullPrompt = `You are an English tutor. Your job is to:
+1. Correct any grammar or spelling mistakes in the user's input.
+2. Then reply naturally like in a conversation.
 
-{
-  "corrected": "corrected version of user input (same as original if no errors)",
-  "reply": "your conversational response",
-  "hasCorrections": boolean,
-  "corrections": [
-    {
-      "original": "incorrect phrase",
-      "corrected": "correct phrase",
-      "explanation": "brief explanation",
-      "type": "grammar|vocabulary|spelling|word-choice"
-    }
-  ]
-}
+Use this format:
+Corrected: <corrected input>
+Reply: <natural reply>
 
-User input: "${userInput}"
-Context: ${context || 'casual conversation practice'}`;
+User: ${userInput}`;
 
       const response = await client.chat.completions.create({
         model: 'gpt-4o',
         messages: [
-          {
-            role: 'system',
-            content: 'You are a friendly and helpful English tutor for spoken English learners.'
-          },
+          systemMessage,
           {
             role: 'user',
-            content: prompt
+            content: fullPrompt
           }
         ],
-        response_format: { type: "json_object" },
         temperature: 0.6,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
+      const aiResponse = response.choices[0]?.message?.content || '';
+      
+      // Parse the AI response to extract corrected text and reply
+      const lines = aiResponse.split('\n');
+      const correctedLine = lines.find(line => line.startsWith("Corrected:"))?.replace("Corrected:", "").trim();
+      const replyLine = lines.find(line => line.startsWith("Reply:"))?.replace("Reply:", "").trim();
+
+      const corrected = correctedLine || userInput;
+      const reply = replyLine || "That's interesting! Tell me more.";
+      const hasCorrections = corrected !== userInput;
+
+      // Generate corrections array if there were changes
+      const corrections = hasCorrections ? [{
+        original: userInput,
+        corrected: corrected,
+        explanation: "Grammar and spelling improvements",
+        type: 'grammar' as const
+      }] : [];
+
       return {
-        corrected: result.corrected || userInput,
-        reply: result.reply || "That's interesting! Tell me more.",
-        hasCorrections: result.hasCorrections || false,
-        corrections: result.corrections || []
+        corrected,
+        reply,
+        hasCorrections,
+        corrections
       };
     } catch (error) {
       console.error('OpenAI Auto-correction Error:', error);
