@@ -49,6 +49,35 @@ class RealSpeechRecognition {
       }
 
       let hasResult = false;
+      let timeoutId: NodeJS.Timeout;
+
+      // Set a maximum timeout to prevent hanging
+      const cleanup = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (this.recognition) {
+          try {
+            this.recognition.onstart = null;
+            this.recognition.onresult = null;
+            this.recognition.onerror = null;
+            this.recognition.onend = null;
+          } catch (e) {
+            console.log('Error cleaning up recognition handlers:', e);
+          }
+        }
+      };
+
+      timeoutId = setTimeout(() => {
+        if (!hasResult) {
+          hasResult = true;
+          cleanup();
+          resolve({
+            transcript: '',
+            confidence: 0,
+            isListening: false,
+            error: 'Speech recognition timed out. Please try again.'
+          });
+        }
+      }, 10000); // 10 second timeout
 
       this.recognition.onstart = () => {
         console.log('Speech recognition started');
@@ -57,21 +86,33 @@ class RealSpeechRecognition {
       this.recognition.onresult = (event) => {
         if (hasResult) return;
         hasResult = true;
+        cleanup();
 
-        const result = event.results[0];
-        const transcript = result[0].transcript;
-        const confidence = result[0].confidence;
+        try {
+          const result = event.results[0];
+          const transcript = result[0].transcript;
+          const confidence = result[0].confidence;
 
-        resolve({
-          transcript: transcript.trim(),
-          confidence: confidence || 0.8,
-          isListening: false
-        });
+          resolve({
+            transcript: transcript.trim(),
+            confidence: confidence || 0.8,
+            isListening: false
+          });
+        } catch (error) {
+          console.error('Error processing speech result:', error);
+          resolve({
+            transcript: '',
+            confidence: 0,
+            isListening: false,
+            error: 'Error processing speech. Please try again.'
+          });
+        }
       };
 
       this.recognition.onerror = (event) => {
         if (hasResult) return;
         hasResult = true;
+        cleanup();
 
         let errorMessage = 'Speech recognition error';
         switch (event.error) {
@@ -87,10 +128,17 @@ class RealSpeechRecognition {
           case 'network':
             errorMessage = 'Network error. Please check your connection.';
             break;
+          case 'aborted':
+            errorMessage = 'Speech recognition was stopped.';
+            break;
+          case 'service-not-allowed':
+            errorMessage = 'Speech recognition service not allowed.';
+            break;
           default:
             errorMessage = `Speech recognition error: ${event.error}`;
         }
 
+        console.log('Speech recognition error:', event.error);
         resolve({
           transcript: '',
           confidence: 0,
@@ -101,6 +149,8 @@ class RealSpeechRecognition {
 
       this.recognition.onend = () => {
         if (!hasResult) {
+          hasResult = true;
+          cleanup();
           resolve({
             transcript: '',
             confidence: 0,
@@ -111,16 +161,36 @@ class RealSpeechRecognition {
       };
 
       try {
-        this.recognition.start();
+        // Stop any existing recognition first
+        this.stopListening();
+        
+        // Small delay to ensure previous recognition is stopped
+        setTimeout(() => {
+          try {
+            this.recognition?.start();
+          } catch (error) {
+            if (!hasResult) {
+              hasResult = true;
+              cleanup();
+              reject(new Error('Failed to start speech recognition: ' + (error as Error).message));
+            }
+          }
+        }, 100);
       } catch (error) {
-        reject(new Error('Failed to start speech recognition'));
+        hasResult = true;
+        cleanup();
+        reject(new Error('Failed to start speech recognition: ' + (error as Error).message));
       }
     });
   }
 
   public stopListening() {
     if (this.recognition) {
-      this.recognition.stop();
+      try {
+        this.recognition.stop();
+      } catch (error) {
+        console.log('Error stopping speech recognition:', error);
+      }
     }
   }
 }

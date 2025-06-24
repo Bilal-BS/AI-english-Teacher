@@ -173,34 +173,41 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
 
       setIsProcessing(true);
       
-      let perfectCorrection: PerfectCorrection | undefined;
-      let pronunciationAnalysis: PronunciationAnalysis | undefined;
-      
-      // Get comprehensive error correction
       try {
-        perfectCorrection = await perfectErrorCorrector.getComprehensiveCorrection(result.transcript);
-        console.log('Perfect correction result:', perfectCorrection);
-      } catch (error) {
-        console.error('Perfect correction failed:', error);
-      }
-      
-      // Get pronunciation analysis if we have a target to compare against
-      try {
-        if (messages.length > 0) {
-          const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
-          if (lastAssistantMessage) {
-            pronunciationAnalysis = await advancedPronunciationAnalyzer.analyzePronunciation(
-              lastAssistantMessage.content,
-              result.transcript
-            );
-            console.log('Pronunciation analysis:', pronunciationAnalysis);
-          }
+        let perfectCorrection: PerfectCorrection | undefined;
+        let pronunciationAnalysis: PronunciationAnalysis | undefined;
+        
+        // Get comprehensive error correction
+        try {
+          perfectCorrection = await perfectErrorCorrector.getComprehensiveCorrection(result.transcript);
+          console.log('Perfect correction result:', perfectCorrection);
+        } catch (error) {
+          console.error('Perfect correction failed:', error);
         }
-      } catch (error) {
-        console.error('Pronunciation analysis failed:', error);
-      }
+        
+        // Get pronunciation analysis if we have a target to compare against
+        try {
+          if (messages.length > 0) {
+            const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
+            if (lastAssistantMessage) {
+              pronunciationAnalysis = await advancedPronunciationAnalyzer.analyzePronunciation(
+                lastAssistantMessage.content,
+                result.transcript
+              );
+              console.log('Pronunciation analysis:', pronunciationAnalysis);
+            }
+          }
+        } catch (error) {
+          console.error('Pronunciation analysis failed:', error);
+        }
 
-      await handleUserMessageWithAnalysis(result.transcript, true, result.confidence, perfectCorrection, pronunciationAnalysis);
+        await handleUserMessageWithAnalysis(result.transcript, true, result.confidence, perfectCorrection, pronunciationAnalysis);
+      } catch (error) {
+        console.error('Error processing speech input:', error);
+        setError('Failed to process speech input. Please try again.');
+      } finally {
+        setIsProcessing(false);
+      }
     } catch (error) {
       setIsRecording(false);
       setIsProcessing(false);

@@ -431,6 +431,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           onComplete={handleFillBlanksComplete}
         />
       )}
+
+      {showPronunciationTrainer && (
+        <PerfectPronunciationTrainer 
+          onClose={() => setShowPronunciationTrainer(false)}
+          onComplete={handlePronunciationTrainerComplete}
+        />
+      )}
     </div>
   );
 };

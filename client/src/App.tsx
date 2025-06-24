@@ -259,6 +259,7 @@ function App() {
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
   const [showVocabularyTrainer, setShowVocabularyTrainer] = useState(false);
   const [showWritingAssistant, setShowWritingAssistant] = useState(false);
+  const [showPronunciationTrainer, setShowPronunciationTrainer] = useState(false);
   
   // 30-day plan state
   const [currentDay, setCurrentDay] = useState(1);
@@ -283,13 +284,20 @@ function App() {
       id: userData.id,
       name: userData.name,
       email: userData.email,
-      nativeLanguage: userData.preferences.nativeLanguage || 'Unknown',
+      nativeLanguage: userData.preferences.nativeLanguage || 'English',
       englishLevel: userData.preferences.difficultyLevel,
-      goals: userData.preferences.focusAreas,
+      goals: userData.preferences.focusAreas || [],
       hasCompletedOnboarding: true,
       hasCompletedPlacementTest: userData.preferences.difficultyLevel !== 'beginner', // Assume placement test completed if not beginner
       createdAt: userData.createdAt,
-      preferences: userData.preferences
+      preferences: {
+        dailyGoal: userData.preferences.dailyGoal,
+        reminderTime: userData.preferences.reminderTime,
+        difficultyLevel: userData.preferences.difficultyLevel,
+        focusAreas: userData.preferences.focusAreas || [],
+        nativeLanguage: userData.preferences.nativeLanguage || 'English',
+        learningGoals: userData.preferences.learningGoals
+      }
     };
 
     setUser(userObj);
@@ -346,7 +354,7 @@ function App() {
         return Math.min(30, Math.max(1, daysSinceStart + 1));
       });
 
-    setCompletedDays([...new Set(completedLessonDays)]);
+    setCompletedDays(Array.from(new Set(completedLessonDays)));
     setCurrentDay(Math.min(30, Math.max(...completedLessonDays, 0) + 1));
 
     // Only set to dashboard if not already there to prevent infinite loop
@@ -560,6 +568,7 @@ function App() {
           onShowDailyChallenge={() => setShowDailyChallenge(true)}
           onShowVocabularyTrainer={() => setShowVocabularyTrainer(true)}
           onShowWritingAssistant={() => setShowWritingAssistant(true)}
+          onShowPronunciationTrainer={() => setShowPronunciationTrainer(true)}
         />
       ) : currentView === 'lesson' && selectedLesson ? (
         <LessonInterface
@@ -595,6 +604,16 @@ function App() {
         <WritingAssistant
           onClose={() => setShowWritingAssistant(false)}
           onComplete={handleWritingComplete}
+        />
+      )}
+
+      {showPronunciationTrainer && (
+        <PerfectPronunciationTrainer 
+          onComplete={(score) => {
+            console.log(`Pronunciation training completed with score: ${score}`);
+            setShowPronunciationTrainer(false);
+          }}
+          onClose={() => setShowPronunciationTrainer(false)}
         />
       )}
     </div>

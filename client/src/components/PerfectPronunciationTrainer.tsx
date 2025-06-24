@@ -122,6 +122,7 @@ const PerfectPronunciationTrainer: React.FC<PerfectPronunciationTrainerProps> = 
   const [overallScore, setOverallScore] = useState(0);
   const [showTips, setShowTips] = useState(false);
   const [perfectAttempts, setPerfectAttempts] = useState(0);
+  const [error, setError] = useState<string>('');
 
   const challenge = pronunciationChallenges[currentChallenge];
 
@@ -132,29 +133,44 @@ const PerfectPronunciationTrainer: React.FC<PerfectPronunciationTrainerProps> = 
     try {
       const result: SpeechRecognitionResult = await speechRecognition.startListening();
       setIsRecording(false);
-      setIsProcessing(true);
+      
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
       
       if (result.transcript) {
-        const analysis = await advancedPronunciationAnalyzer.analyzePronunciation(
-          challenge.targetText,
-          result.transcript
-        );
+        setIsProcessing(true);
         
-        setCurrentAnalysis(analysis);
-        setAttempts(prev => [...prev, analysis]);
-        
-        // Track perfect attempts (90%+ score)
-        if (analysis.overallScore >= 90) {
-          setPerfectAttempts(prev => prev + 1);
+        try {
+          const analysis = await advancedPronunciationAnalyzer.analyzePronunciation(
+            challenge.targetText,
+            result.transcript
+          );
+          
+          setCurrentAnalysis(analysis);
+          setAttempts(prev => [...prev, analysis]);
+          
+          // Track perfect attempts (90%+ score)
+          if (analysis.overallScore >= 90) {
+            setPerfectAttempts(prev => prev + 1);
+          }
+          
+          // Update overall score
+          const totalScore = [...attempts, analysis].reduce((sum, a) => sum + a.overallScore, 0);
+          setOverallScore(Math.round(totalScore / (attempts.length + 1)));
+        } catch (analysisError) {
+          console.error('Analysis error:', analysisError);
+          setError('Failed to analyze pronunciation. Please try again.');
+        } finally {
+          setIsProcessing(false);
         }
-        
-        // Update overall score
-        const totalScore = [...attempts, analysis].reduce((sum, a) => sum + a.overallScore, 0);
-        setOverallScore(Math.round(totalScore / (attempts.length + 1)));
+      } else {
+        setError('No speech detected. Please try again.');
       }
     } catch (error) {
       console.error('Recording error:', error);
-    } finally {
+      setError('Recording failed. Please try again.');
       setIsRecording(false);
       setIsProcessing(false);
     }
@@ -172,14 +188,33 @@ const PerfectPronunciationTrainer: React.FC<PerfectPronunciationTrainerProps> = 
 
   const handleRetry = () => {
     setCurrentAnalysis(null);
+    setError('');
   };
 
   const playTargetAudio = () => {
     if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(challenge.targetText);
-      utterance.rate = 0.8;
-      utterance.pitch = 1;
-      speechSynthesis.speak(utterance);
+      // Cancel any ongoing speech to prevent interruption
+      speechSynthesis.cancel();
+      
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(challenge.targetText);
+        utterance.rate = 0.8;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        // Add event handlers to prevent interruption errors
+        utterance.onstart = () => console.log('Pronunciation audio started');
+        utterance.onend = () => console.log('Pronunciation audio ended');
+        utterance.onerror = (event) => {
+          console.log('Pronunciation audio error:', event.error);
+          // Retry once if it fails
+          if (event.error !== 'interrupted') {
+            setTimeout(() => speechSynthesis.speak(utterance), 500);
+          }
+        };
+        
+        speechSynthesis.speak(utterance);
+      }, 100);
     }
   };
 
@@ -320,6 +355,13 @@ const PerfectPronunciationTrainer: React.FC<PerfectPronunciationTrainerProps> = 
                    isProcessing ? 'Analyzing pronunciation...' : 
                    'Tap to start recording'}
                 </p>
+                
+                {/* Error Display */}
+                {error && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-700 text-sm">{error}</p>
+                  </div>
+                )}
               </div>
 
               {/* Tips Toggle */}
