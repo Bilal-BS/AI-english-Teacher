@@ -118,6 +118,10 @@ Recent Updates:
 - June 24, 2025: Added auto-correction feature with visual feedback display
 - June 24, 2025: Improved conversation variety with response tracking and 8 different response patterns
 - June 24, 2025: Enhanced placement test validation and fill-blank question handling
+- June 24, 2025: Implemented comprehensive auto-correction system with grammar scoring (70-100%)
+- June 24, 2025: Fixed browser environment errors and map() undefined issues
+- June 24, 2025: Added intelligent basic error detection for common grammar mistakes
+- June 24, 2025: Created beautiful auto-correction UI with original vs corrected text display
 
 ## User Preferences
 
