@@ -399,10 +399,14 @@ function App() {
       learningGoals: onboardingData.goals
     });
 
-    // Check if placement test is needed
-    if (onboardingData.englishLevel === 'beginner') {
+    // If this is a quick start (name is 'Quick Start User'), skip placement test
+    if (onboardingData.name === 'Quick Start User') {
+      setCurrentView('dashboard');
+      loadUserData();
+    } else if (onboardingData.englishLevel === 'beginner') {
       setCurrentView('placement');
     } else {
+      setCurrentView('dashboard');
       loadUserData();
     }
   };
@@ -418,6 +422,14 @@ function App() {
   };
 
   const handlePlacementTestSkip = () => {
+    // Mark placement test as completed with default beginner level
+    const userData = userDataManager.getUserData();
+    if (userData) {
+      userDataManager.updateUserPreferences({
+        difficultyLevel: 'beginner'
+      });
+    }
+    setCurrentView('dashboard');
     loadUserData();
   };
 

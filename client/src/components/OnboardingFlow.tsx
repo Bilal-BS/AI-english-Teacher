@@ -162,6 +162,21 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             <p className="text-sm font-medium text-orange-800">Community Support</p>
           </div>
         </div>
+        <div className="pt-4">
+          <button
+            onClick={() => onComplete({
+              name: 'Quick Start User',
+              nativeLanguage: 'Other',
+              englishLevel: 'beginner',
+              goals: ['conversation'],
+              dailyGoal: 2,
+              focusAreas: ['speaking', 'listening']
+            })}
+            className="text-gray-600 hover:text-gray-800 py-2 transition-colors font-medium underline"
+          >
+            Skip setup and start learning immediately
+          </button>
+        </div>
       </div>
     );
   }
