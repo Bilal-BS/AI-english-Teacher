@@ -29,11 +29,12 @@ This is a comprehensive English learning application built with a modern full-st
 
 ### Core Learning Features
 1. **Interactive Lessons**: Multi-modal exercises including speaking, listening, reading, and writing
-2. **AI-Powered Conversation**: Real-time conversation practice with OpenAI integration
-3. **Speech Recognition**: Browser-based speech recognition for pronunciation practice
-4. **Vocabulary Trainer**: Spaced repetition system for vocabulary building
-5. **Writing Assistant**: AI-powered writing feedback and improvement suggestions
-6. **Daily Challenges**: Gamified daily exercises to maintain engagement
+2. **AI-Powered Conversation**: Real-time conversation practice with auto-correction and contextual responses
+3. **Auto-Correction System**: Intelligent grammar and spelling corrections with 30+ pattern recognition
+4. **Speech Recognition**: Browser-based speech recognition for pronunciation practice
+5. **Vocabulary Trainer**: Spaced repetition system for vocabulary building
+6. **Writing Assistant**: AI-powered writing feedback and improvement suggestions
+7. **Daily Challenges**: Gamified daily exercises to maintain engagement
 
 ### User Experience Features
 1. **Onboarding Flow**: Comprehensive setup including placement test and goal setting
@@ -126,9 +127,12 @@ Recent Updates:
 - June 24, 2025: Updated response parsing to use "Corrected:" and "Reply:" format
 - June 24, 2025: Enhanced API key access for Replit environment configuration
 - June 24, 2025: Implemented backend API architecture for OpenAI integration
-- June 24, 2025: Added comprehensive fallback grammar corrections (17 common patterns)
-- June 24, 2025: Enhanced conversation responses with randomized replies
+- June 24, 2025: Added comprehensive fallback grammar corrections (30+ patterns including past tense)
+- June 24, 2025: Enhanced conversation responses with context-aware categorized replies
 - June 24, 2025: Fixed auto-correction system to work with both AI and fallback modes
+- June 24, 2025: Added conversation memory with 6-message history for context
+- June 24, 2025: Implemented dynamic user input handling and enhanced regex parsing
+- June 24, 2025: Increased OpenAI temperature to 0.7 for more creative responses
 
 ## User Preferences
 

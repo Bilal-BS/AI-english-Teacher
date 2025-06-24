@@ -50,9 +50,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { find: /\bwe go (.+) yesterday\b/gi, replace: 'we went $1 yesterday' },
         { find: /\bthey go (.+) yesterday\b/gi, replace: 'they went $1 yesterday' },
         
+        // Past tense fixes for other verbs with "yesterday"
+        { find: /\bi eat (.+) yesterday\b/gi, replace: 'I ate $1 yesterday' },
+        { find: /\bi come (.+) yesterday\b/gi, replace: 'I came $1 yesterday' },
+        { find: /\bi see (.+) yesterday\b/gi, replace: 'I saw $1 yesterday' },
+        { find: /\bi buy (.+) yesterday\b/gi, replace: 'I bought $1 yesterday' },
+        { find: /\bi make (.+) yesterday\b/gi, replace: 'I made $1 yesterday' },
+        
         // General past tense fixes
         { find: /\bgo (.+) yesterday\b/gi, replace: 'went $1 yesterday' },
-        { find: /\bi go to\b/gi, replace: 'I went to' },
+        { find: /\beat (.+) yesterday\b/gi, replace: 'ate $1 yesterday' },
+        { find: /\bcome (.+) yesterday\b/gi, replace: 'came $1 yesterday' },
         
         // Negative contractions
         { find: /\bhe don't\b/gi, replace: 'he doesn\'t' },
@@ -74,11 +82,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { find: /\bmore better\b/gi, replace: 'better' },
         { find: /\bdon't have no\b/gi, replace: 'don\'t have any' },
         
-        // Article fixes
+        // Article and preposition fixes
         { find: /\bgo to park\b/gi, replace: 'go to the park' },
         { find: /\bwent to park\b/gi, replace: 'went to the park' },
-        { find: /\bgo to school\b/gi, replace: 'go to school' },
-        { find: /\bwent to school\b/gi, replace: 'went to school' }
+        { find: /\bcome yesterday school\b/gi, replace: 'came to school yesterday' },
+        { find: /\bgo yesterday school\b/gi, replace: 'went to school yesterday' },
+        { find: /\bcome school\b/gi, replace: 'come to school' },
+        { find: /\bgo school\b/gi, replace: 'go to school' },
+        { find: /\byeasterday\b/gi, replace: 'yesterday' }
       ];
       
       corrections.forEach(correction => {
