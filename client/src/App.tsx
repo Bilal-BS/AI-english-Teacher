@@ -571,7 +571,10 @@ function App() {
           userProgress={userProgress}
           recentLessons={lessons.slice(0, 6)}
           onStartLesson={handleStartLesson}
-          onShowPlan={handleShowPlan}
+          onShowPlan={() => {
+            console.log('Dashboard onShowPlan called');
+            handleShowPlan();
+          }}
           onShowDailyChallenge={() => setShowDailyChallenge(true)}
           onShowVocabularyTrainer={() => setShowVocabularyTrainer(true)}
           onShowWritingAssistant={() => setShowWritingAssistant(true)}
