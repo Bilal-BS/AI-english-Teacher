@@ -1,16 +1,14 @@
 import OpenAI from 'openai';
 
-// Get API key from multiple possible sources
+// Get API key from environment
 const getApiKey = () => {
-  // Check environment variables in order of preference
+  // Check both Vite env and window object for Replit secrets
   const envKey = import.meta.env.VITE_OPENAI_API_KEY;
   
   if (envKey && envKey.length > 10 && envKey.startsWith('sk-')) {
-    console.log('API Key loaded from environment');
     return envKey;
   }
   
-  console.log('No valid API Key found in environment');
   return '';
 };
 
@@ -46,6 +44,86 @@ export interface WritingFeedback {
 
 export class OpenAIService {
   
+  // Combined auto-correction + conversation response
+  async chatWithAutoCorrection(userInput: string, context?: string): Promise<{
+    corrected: string;
+    reply: string;
+    hasCorrections: boolean;
+    corrections: Array<{
+      original: string;
+      corrected: string;
+      explanation: string;
+      type: 'grammar' | 'vocabulary' | 'spelling' | 'word-choice';
+    }>;
+  }> {
+    try {
+      const client = initializeOpenAI();
+      if (!client) {
+        return {
+          corrected: userInput,
+          reply: "I'm having trouble connecting right now. Please try again later.",
+          hasCorrections: false,
+          corrections: []
+        };
+      }
+
+      const prompt = `You are a friendly English teacher helping users improve spoken English.
+
+1. First, correct any grammar or spelling mistakes in the user's sentence.
+2. Then, reply naturally as if you're having a conversation with the user.
+3. Respond in the following JSON format:
+
+{
+  "corrected": "corrected version of user input (same as original if no errors)",
+  "reply": "your conversational response",
+  "hasCorrections": boolean,
+  "corrections": [
+    {
+      "original": "incorrect phrase",
+      "corrected": "correct phrase",
+      "explanation": "brief explanation",
+      "type": "grammar|vocabulary|spelling|word-choice"
+    }
+  ]
+}
+
+User input: "${userInput}"
+Context: ${context || 'casual conversation practice'}`;
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a friendly and helpful English tutor for spoken English learners.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.6,
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      return {
+        corrected: result.corrected || userInput,
+        reply: result.reply || "That's interesting! Tell me more.",
+        hasCorrections: result.hasCorrections || false,
+        corrections: result.corrections || []
+      };
+    } catch (error) {
+      console.error('OpenAI Auto-correction Error:', error);
+      return {
+        corrected: userInput,
+        reply: "That's interesting! Tell me more about that.",
+        hasCorrections: false,
+        corrections: []
+      };
+    }
+  }
+
   // Chat with AI for conversation practice
   async chatWithAI(messages: ChatMessage[], context?: string): Promise<string> {
     try {
@@ -386,9 +464,7 @@ Guidelines:
 
   isConfigured(): boolean {
     const apiKey = getApiKey();
-    const hasKey = !!apiKey && apiKey.length > 10 && apiKey.startsWith('sk-');
-    console.log('OpenAI API Key configured:', hasKey ? 'Yes' : 'No', 'Length:', apiKey?.length || 0);
-    return hasKey;
+    return !!apiKey && apiKey.length > 10 && apiKey.startsWith('sk-');
   }
 }
 

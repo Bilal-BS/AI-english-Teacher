@@ -167,26 +167,44 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
     setTurnCount(newTurnCount);
 
     try {
+      const topicTitle = conversationTopics.find(t => t.id === conversationTopic)?.title || 'general topics';
+      let aiResponse: string;
       let corrections = null;
-      
-      // Add corrections if auto-correct is enabled
-      if (autoCorrectEnabled) {
-        setIsGettingCorrection(true);
-        try {
-          const correctionFeedback = await openaiService.getCorrectionFeedback(content, `Conversation about ${conversationTopic}`);
-          corrections = correctionFeedback;
-        } catch (error) {
-          console.error('Error getting corrections:', error);
-          // Fallback correction analysis
-          corrections = {
-            hasErrors: false,
-            correctedText: content,
-            corrections: [],
-            encouragement: "Keep practicing! You're doing great.",
-            grammarScore: 85
-          };
+
+      if (openaiService.isConfigured()) {
+        // Use combined auto-correction + conversation if auto-correct is enabled
+        if (autoCorrectEnabled) {
+          setIsGettingCorrection(true);
+          try {
+            const result = await openaiService.chatWithAutoCorrection(content, `Conversation about ${topicTitle}`);
+            aiResponse = result.reply;
+            corrections = {
+              hasErrors: result.hasCorrections,
+              correctedText: result.corrected,
+              corrections: result.corrections,
+              encouragement: "Great job practicing! Keep going.",
+              grammarScore: result.hasCorrections ? 85 : 95
+            };
+          } catch (error) {
+            console.error('Error with auto-correction:', error);
+            // Fallback to regular chat
+            aiResponse = await openaiService.chatWithAI([{ role: 'user', content }], `Conversation about ${topicTitle}`);
+          }
+          setIsGettingCorrection(false);
+        } else {
+          // Regular conversation without auto-correction
+          const chatMessages: ChatMessage[] = messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }));
+          chatMessages.push({ role: 'user', content });
+          
+          const context = `You are an engaging English conversation teacher discussing ${topicTitle}. Be encouraging and ask follow-up questions.`;
+          aiResponse = await openaiService.chatWithAI(chatMessages, context);
         }
-        setIsGettingCorrection(false);
+      } else {
+        console.log('OpenAI not configured, using fallback');
+        aiResponse = generateFallbackResponse(content, conversationTopic);
       }
 
       const userMessage: ConversationMessage = {
@@ -207,57 +225,6 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
       };
 
       setMessages(prev => [...prev, userMessage]);
-
-      // Prepare conversation context for AI (include the new user message)
-      const updatedMessages = [...messages, userMessage];
-      const chatMessages: ChatMessage[] = updatedMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
-
-      const topicTitle = conversationTopics.find(t => t.id === conversationTopic)?.title || 'general topics';
-      const recentConversation = updatedMessages.slice(-6).map(m => `${m.role === 'user' ? 'Student' : 'Teacher'}: ${m.content}`).join('\n');
-      
-      const context = `You are an engaging, supportive English conversation teacher having a natural conversation with a student.
-
-CONVERSATION TOPIC: ${topicTitle}
-CONVERSATION HISTORY:
-${recentConversation}
-
-YOUR ROLE:
-- Act like a friendly, patient English teacher who makes conversation feel natural and enjoyable
-- Show genuine interest in what the student shares
-- Ask thoughtful follow-up questions that encourage the student to keep talking
-- Use simple, clear language appropriate for English learners
-- Be encouraging and positive about their progress
-
-RESPONSE STYLE:
-- Keep responses conversational and natural (1-3 sentences)
-- Reference specific things they mentioned to show you're actively listening
-- Ask open-ended questions that invite detailed responses
-- Vary your conversation starters and responses
-- Make the student feel comfortable making mistakes
-- Focus on communication and fluency over perfect grammar
-
-IMPORTANT: Respond as if you're having a real conversation with a friend, not giving a lesson. Be warm, encouraging, and genuinely interested in their thoughts and experiences.`;
-
-      let aiResponse: string;
-      
-      console.log('Checking OpenAI configuration...');
-      if (openaiService.isConfigured()) {
-        console.log('OpenAI configured, making API call...');
-        try {
-          aiResponse = await openaiService.chatWithAI(chatMessages, context);
-          console.log('AI Response received:', aiResponse ? 'Success' : 'Empty response');
-        } catch (error) {
-          console.error('OpenAI API Error:', error);
-          aiResponse = generateFallbackResponse(content, conversationTopic);
-          console.log('Using fallback response due to error');
-        }
-      } else {
-        console.log('OpenAI not configured, using fallback');
-        aiResponse = generateFallbackResponse(content, conversationTopic);
-      }
 
       const assistantMessage: ConversationMessage = {
         id: (Date.now() + 1).toString(),
