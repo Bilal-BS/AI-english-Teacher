@@ -303,7 +303,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <div className="ml-8">
               <button
-                onClick={onShowPlan}
+                onClick={() => {
+                  console.log('Start Mastery Journey button clicked');
+                  if (onShowPlan) {
+                    onShowPlan();
+                  } else {
+                    console.error('onShowPlan handler is not defined');
+                  }
+                }}
                 className="bg-white text-purple-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
               >
                 <Map className="w-5 h-5" />

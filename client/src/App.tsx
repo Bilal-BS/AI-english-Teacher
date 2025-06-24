@@ -426,12 +426,16 @@ function App() {
   };
 
   const handlePlacementTestComplete = (result: PlacementTestResult) => {
+    console.log('Placement test completed with result:', result);
     // Update user's English level based on test result
     if (user) {
       userDataManager.updateUserPreferences({
         difficultyLevel: result.level
       });
+      console.log('Updated user preferences with level:', result.level);
     }
+    // Navigate to dashboard after placement test
+    setCurrentView('dashboard');
     loadUserData();
   };
 
@@ -496,6 +500,7 @@ function App() {
   };
 
   const handleShowPlan = () => {
+    console.log('Opening level-based learning plan');
     setShowLevelBasedPlan(true);
   };
 

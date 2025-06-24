@@ -75,6 +75,7 @@ const LevelBasedLearningPlan: React.FC<LevelBasedLearningPlanProps> = ({
   };
 
   const handleStartLesson = (day: number) => {
+    console.log('Starting lesson for day:', day);
     onStartDay(day);
     setSelectedDay(null);
   };
