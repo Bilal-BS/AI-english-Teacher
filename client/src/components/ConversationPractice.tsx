@@ -36,6 +36,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
   const [turnCount, setTurnCount] = useState(0);
   const [showCorrections, setShowCorrections] = useState(true);
   const [isGettingCorrection, setIsGettingCorrection] = useState(false);
+  const [autoCorrectEnabled, setAutoCorrectEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const conversationTopics = [
@@ -166,7 +167,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
       let correctionFeedback = null;
       
       // Get correction feedback if enabled and OpenAI is configured
-      if (showCorrections && openaiService.isConfigured() && content.trim().length > 3) {
+      if ((showCorrections || autoCorrectEnabled) && openaiService.isConfigured() && content.trim().length > 3) {
         setIsGettingCorrection(true);
         try {
           const topicTitle = conversationTopics.find(t => t.id === conversationTopic)?.title || 'general conversation';
@@ -199,28 +200,36 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
       }));
 
       const topicTitle = conversationTopics.find(t => t.id === conversationTopic)?.title || 'general topics';
-      const context = `You are a friendly English conversation partner helping someone practice English. 
+      const context = `You are a friendly, enthusiastic English conversation partner helping someone practice English. 
 
 Topic: ${topicTitle}
 Current conversation turn: ${newTurnCount}
+Previous conversation: ${updatedMessages.slice(-4).map(m => `${m.role}: ${m.content}`).join('\n')}
 
 Guidelines:
-- Keep responses natural and conversational (1-2 sentences)
-- Ask engaging follow-up questions to continue the conversation
-- Match the user's language level - don't use overly complex vocabulary
-- Be encouraging and supportive
-- Focus on communication over perfect grammar
-- Vary your responses - don't repeat similar phrases
-- Show genuine interest in what the user is saying
+- Keep responses natural and conversational (1-3 sentences)
+- Ask engaging, specific follow-up questions related to what they just said
+- Match the user's language level and avoid overly complex vocabulary
+- Be encouraging, enthusiastic, and show genuine interest
+- Use varied sentence starters and question types
+- Reference what they mentioned to show you're listening
+- Create a flowing conversation, not robotic Q&A
+- Be supportive and positive about their English practice
 
-Respond naturally as if you're having a real conversation with a friend who is learning English.`;
+Create responses that feel like talking to a real friend who is genuinely interested in the conversation topic.`;
 
       let aiResponse: string;
       
       if (openaiService.isConfigured()) {
-        aiResponse = await openaiService.chatWithAI(chatMessages, context);
+        try {
+          aiResponse = await openaiService.chatWithAI(chatMessages, context);
+          console.log('AI Response received:', aiResponse.substring(0, 50) + '...');
+        } catch (error) {
+          console.error('OpenAI API Error:', error);
+          aiResponse = generateFallbackResponse(content, conversationTopic);
+        }
       } else {
-        // Fallback responses for demo
+        console.log('OpenAI not configured, using fallback');
         aiResponse = generateFallbackResponse(content, conversationTopic);
       }
 
@@ -374,6 +383,7 @@ Respond naturally as if you're having a real conversation with a friend who is l
     setError('');
     setIsGettingCorrection(false);
     setIsProcessing(false);
+    setAutoCorrectEnabled(true);
   };
 
   const endConversation = () => {
@@ -450,13 +460,13 @@ Respond naturally as if you're having a real conversation with a friend who is l
                 <div className="text-lg font-bold">{conversationScore}%</div>
               </div>
               <button
-                onClick={() => setShowCorrections(!showCorrections)}
+                onClick={() => setAutoCorrectEnabled(!autoCorrectEnabled)}
                 className={`p-2 rounded-lg transition-colors ${
-                  showCorrections 
+                  autoCorrectEnabled 
                     ? 'bg-white bg-opacity-20 text-white' 
                     : 'bg-white bg-opacity-10 text-white opacity-60'
                 }`}
-                title={showCorrections ? 'Disable corrections' : 'Enable corrections'}
+                title={autoCorrectEnabled ? 'Disable auto-corrections' : 'Enable auto-corrections'}
               >
                 <BookOpen className="w-5 h-5" />
               </button>
@@ -499,32 +509,37 @@ Respond naturally as if you're having a real conversation with a friend who is l
                 </div>
               </div>
               
-              {/* Corrections Display */}
-              {message.corrections && message.corrections.length > 0 && (
+              {/* Auto-Corrections Display */}
+              {(showCorrections || autoCorrectEnabled) && message.corrections && message.corrections.length > 0 && (
                 <div className="mt-2 mr-0 ml-auto max-w-xs lg:max-w-md">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3 shadow-sm">
                     <div className="flex items-center space-x-2 mb-2">
-                      <BookOpen className="w-4 h-4 text-yellow-600" />
-                      <span className="text-sm font-medium text-yellow-800">Helpful Suggestions</span>
+                      <BookOpen className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">
+                        {autoCorrectEnabled ? 'Auto-Correction' : 'Helpful Suggestions'}
+                      </span>
                     </div>
                     
                     {message.corrections.map((correction, index) => (
-                      <div key={index} className="mb-2 last:mb-0">
+                      <div key={index} className="mb-2 last:mb-0 bg-white rounded-md p-2">
                         <div className="text-sm">
-                          <span className="line-through text-red-600 bg-red-100 px-1 rounded">
+                          <span className="line-through text-red-600 bg-red-100 px-1.5 py-0.5 rounded">
                             {correction.original}
                           </span>
-                          <span className="mx-2">→</span>
-                          <span className="text-green-600 bg-green-100 px-1 rounded font-medium">
+                          <span className="mx-2 text-gray-400">→</span>
+                          <span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded font-medium">
                             {correction.corrected}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1">{correction.explanation}</p>
+                        <p className="text-xs text-gray-600 mt-1 italic">{correction.explanation}</p>
+                        <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full mt-1 inline-block">
+                          {correction.type}
+                        </span>
                       </div>
                     ))}
                     
                     {message.encouragement && (
-                      <div className="mt-2 pt-2 border-t border-yellow-200">
+                      <div className="mt-2 pt-2 border-t border-blue-200">
                         <p className="text-xs text-green-700 font-medium">{message.encouragement}</p>
                       </div>
                     )}
@@ -631,10 +646,15 @@ Respond naturally as if you're having a real conversation with a friend who is l
           <div className="mt-3 text-xs text-gray-500 text-center">
             {isRecording ? 'Listening... Speak now!' : 'Click the microphone to speak or type your message'}
             {turnCount < 5 && ` • ${5 - turnCount} more exchanges to complete session`}
-            {showCorrections && openaiService.isConfigured() && (
+            {autoCorrectEnabled && openaiService.isConfigured() && (
               <div className="mt-1 flex items-center justify-center space-x-1">
                 <BookOpen className="w-3 h-3" />
-                <span>AI corrections enabled</span>
+                <span>Auto-corrections enabled</span>
+              </div>
+            )}
+            {!openaiService.isConfigured() && (
+              <div className="mt-1 text-orange-500">
+                OpenAI not configured - using demo responses
               </div>
             )}
           </div>

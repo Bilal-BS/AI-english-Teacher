@@ -4,7 +4,9 @@ import OpenAI from 'openai';
 const getApiKey = () => {
   // In a browser environment, the API key should come from environment variables
   // For security, this should ideally be handled by a backend proxy in production
-  return import.meta.env.VITE_OPENAI_API_KEY || '';
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || '';
+  console.log('API Key length:', apiKey ? apiKey.length : 0);
+  return apiKey;
 };
 
 let openai: OpenAI | null = null;
@@ -284,7 +286,10 @@ Focus on:
 
   // Check if OpenAI is configured
   isConfigured(): boolean {
-    return !!getApiKey();
+    const apiKey = getApiKey();
+    const hasKey = !!apiKey && apiKey.length > 10;
+    console.log('OpenAI API Key configured:', hasKey ? 'Yes' : 'No');
+    return hasKey;
   }
 }
 
