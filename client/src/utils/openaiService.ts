@@ -1,11 +1,8 @@
 import OpenAI from 'openai';
 
-// Get API key from environment
+// Get API key from environment - Replit secrets are exposed as VITE_ prefixed vars
 const getApiKey = () => {
-  // Try multiple sources for the API key
-  const envKey = import.meta.env.VITE_OPENAI_API_KEY || 
-                 import.meta.env.OPENAI_API_KEY ||
-                 (typeof process !== 'undefined' && process.env?.OPENAI_API_KEY);
+  const envKey = import.meta.env.VITE_OPENAI_API_KEY;
   
   if (envKey && envKey.length > 10 && envKey.startsWith('sk-')) {
     return envKey;
@@ -69,41 +66,31 @@ export class OpenAIService {
         };
       }
 
-      const systemMessage = {
-        role: 'system' as const,
-        content: `You are a helpful English tutor. Always correct grammar/spelling and then reply like a conversation partner. Use this exact format:
-Corrected: ...
-Reply: ...`
-      };
+      const systemPrompt = `You are a friendly English tutor. Always do two things:
+1. Correct grammar/spelling in the user's sentence.
+2. Then give a friendly conversational reply.
 
-      const fullPrompt = `You are an English tutor. Your job is to:
-1. Correct any grammar or spelling mistakes in the user's input.
-2. Then reply naturally like in a conversation.
-
-Use this format:
-Corrected: <corrected input>
-Reply: <natural reply>
-
-User: ${userInput}`;
+Format:
+Corrected: <corrected version>
+Reply: <your response>`;
 
       const response = await client.chat.completions.create({
         model: 'gpt-4o',
         messages: [
-          systemMessage,
-          {
-            role: 'user',
-            content: fullPrompt
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userInput }
         ],
-        temperature: 0.6,
+        temperature: 0.5,
       });
 
       const aiResponse = response.choices[0]?.message?.content || '';
       
       // Parse the AI response to extract corrected text and reply
-      const lines = aiResponse.split('\n');
-      const correctedLine = lines.find(line => line.startsWith("Corrected:"))?.replace("Corrected:", "").trim();
-      const replyLine = lines.find(line => line.startsWith("Reply:"))?.replace("Reply:", "").trim();
+      const correctedMatch = aiResponse.match(/Corrected:\s*(.+)/i);
+      const replyMatch = aiResponse.match(/Reply:\s*(.+)/i);
+      
+      const correctedLine = correctedMatch ? correctedMatch[1].trim() : null;
+      const replyLine = replyMatch ? replyMatch[1].trim() : null;
 
       const corrected = correctedLine || userInput;
       const reply = replyLine || "That's interesting! Tell me more.";
@@ -474,7 +461,11 @@ Guidelines:
 
   isConfigured(): boolean {
     const apiKey = getApiKey();
-    return !!apiKey && apiKey.length > 10 && apiKey.startsWith('sk-');
+    const isValid = !!apiKey && apiKey.length > 10 && apiKey.startsWith('sk-');
+    if (!isValid) {
+      console.log('OpenAI API key not found or invalid. Please check your secrets configuration.');
+    }
+    return isValid;
   }
 }
 
