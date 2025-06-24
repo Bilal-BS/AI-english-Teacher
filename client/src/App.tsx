@@ -422,13 +422,16 @@ function App() {
   };
 
   const handlePlacementTestSkip = () => {
+    console.log('Placement test skip handler called');
     // Mark placement test as completed with default beginner level
     const userData = userDataManager.getUserData();
     if (userData) {
       userDataManager.updateUserPreferences({
         difficultyLevel: 'beginner'
       });
+      console.log('Updated user preferences to beginner level');
     }
+    console.log('Switching to dashboard view');
     setCurrentView('dashboard');
     loadUserData();
   };

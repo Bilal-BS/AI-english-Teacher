@@ -354,6 +354,7 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
   };
 
   const handleSkipTest = () => {
+    console.log('Skip test clicked');
     onSkip();
   };
 
