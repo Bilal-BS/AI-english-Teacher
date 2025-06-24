@@ -138,6 +138,10 @@ Recent Updates:
 - June 24, 2025: Implemented bilingual auto-correction with native language explanations
 - June 24, 2025: Created translation service with fallback phrases for common terms
 - June 24, 2025: Enhanced conversation practice UI with language selection dropdown
+- June 24, 2025: Implemented comprehensive grammar correction system like Grammarly
+- June 24, 2025: Added detailed word-by-word analysis with explanations for every correction
+- June 24, 2025: Enhanced OpenAI prompts for advanced grammar analysis and feedback
+- June 24, 2025: Created detailed correction parsing with original→corrected format
 
 ## User Preferences
 

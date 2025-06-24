@@ -200,7 +200,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
               grammarScore: bilingualResult.correctedEnglish !== content ? 85 : 95
             };
           } else {
-            // Regular auto-correction
+            // Enhanced auto-correction with detailed analysis
             const response = await fetch('/api/conversation', {
               method: 'POST',
               headers: {
@@ -217,12 +217,12 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
             corrections = {
               hasErrors: result.hasCorrections,
               correctedText: result.corrected,
-              corrections: result.hasCorrections ? [{
+              corrections: result.corrections || (result.hasCorrections ? [{
                 original: content,
                 corrected: result.corrected,
-                explanation: "Grammar and spelling improvements",
+                explanation: "Grammar and spelling improvements detected",
                 type: 'grammar' as const
-              }] : [],
+              }] : []),
               encouragement: "Great job practicing! Keep going.",
               grammarScore: result.hasCorrections ? 85 : 95
             };

@@ -16,9 +16,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const result = await getCorrectedConversation(userInput, conversationHistory || []);
       
-      // Enhanced parsing with better regex
+      // Enhanced parsing with detailed corrections
       const corrected = result?.match(/Corrected:\s*(.+)/i)?.[1]?.trim() || "";
       const reply = result?.match(/Reply:\s*(.+)/i)?.[1]?.trim() || "";
+      
+      // Extract detailed corrections
+      const correctionsBlock = result?.split("Corrections:")[1]?.split("Reply:")[0]?.trim() || "";
+      const corrections = correctionsBlock
+        .split("\n")
+        .filter(line => line.trim().startsWith("-"))
+        .map(line => {
+          const match = line.match(/- "([^"]+)" → "([^"]+)": (.+)/);
+          if (match) {
+            return {
+              original: match[1],
+              corrected: match[2],
+              explanation: match[3],
+              type: 'grammar'
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
       
       // Use corrected text if found, otherwise original
       const finalCorrected = corrected || userInput;
@@ -27,74 +46,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         corrected: finalCorrected,
         reply: finalReply,
-        hasCorrections: finalCorrected !== userInput
+        hasCorrections: finalCorrected !== userInput,
+        corrections: corrections
       });
     } catch (error) {
       console.error('OpenAI API Error:', error);
       
-      // Enhanced fallback correction for common grammar errors
+      // Comprehensive fallback correction system like Grammarly
       const input = req.body.userInput || '';
       let fallbackCorrected = input;
+      let detailedCorrections = [];
       
-      // Enhanced grammar patterns with past tense fixes
-      const corrections = [
-        // Present tense third person fixes
-        { find: /\bhe go\b/gi, replace: 'he goes' },
-        { find: /\bshe go\b/gi, replace: 'she goes' },
-        { find: /\bit go\b/gi, replace: 'it goes' },
-        
-        // Past tense fixes for "go" with "yesterday"
-        { find: /\bi go (.+) yesterday\b/gi, replace: 'I went $1 yesterday' },
-        { find: /\bhe go (.+) yesterday\b/gi, replace: 'he went $1 yesterday' },
-        { find: /\bshe go (.+) yesterday\b/gi, replace: 'she went $1 yesterday' },
-        { find: /\bwe go (.+) yesterday\b/gi, replace: 'we went $1 yesterday' },
-        { find: /\bthey go (.+) yesterday\b/gi, replace: 'they went $1 yesterday' },
-        
-        // Past tense fixes for other verbs with "yesterday"
-        { find: /\bi eat (.+) yesterday\b/gi, replace: 'I ate $1 yesterday' },
-        { find: /\bi come (.+) yesterday\b/gi, replace: 'I came $1 yesterday' },
-        { find: /\bi see (.+) yesterday\b/gi, replace: 'I saw $1 yesterday' },
-        { find: /\bi buy (.+) yesterday\b/gi, replace: 'I bought $1 yesterday' },
-        { find: /\bi make (.+) yesterday\b/gi, replace: 'I made $1 yesterday' },
-        
-        // General past tense fixes
-        { find: /\bgo (.+) yesterday\b/gi, replace: 'went $1 yesterday' },
-        { find: /\beat (.+) yesterday\b/gi, replace: 'ate $1 yesterday' },
-        { find: /\bcome (.+) yesterday\b/gi, replace: 'came $1 yesterday' },
-        
-        // Negative contractions
-        { find: /\bhe don't\b/gi, replace: 'he doesn\'t' },
-        { find: /\bshe don't\b/gi, replace: 'she doesn\'t' },
-        { find: /\bit don't\b/gi, replace: 'it doesn\'t' },
-        
-        // To be verb fixes
-        { find: /\bi are\b/gi, replace: 'I am' },
-        { find: /\byou is\b/gi, replace: 'you are' },
-        
-        // Other common errors
-        { find: /\bwas went\b/gi, replace: 'went' },
-        { find: /\bhave went\b/gi, replace: 'have gone' },
-        { find: /\byestarday\b/gi, replace: 'yesterday' },
-        { find: /\btommorow\b/gi, replace: 'tomorrow' },
-        { find: /\brecieve\b/gi, replace: 'receive' },
-        { find: /\bseperate\b/gi, replace: 'separate' },
-        { find: /\bmuch people\b/gi, replace: 'many people' },
-        { find: /\bmore better\b/gi, replace: 'better' },
-        { find: /\bdon't have no\b/gi, replace: 'don\'t have any' },
-        
-        // Article and preposition fixes
-        { find: /\bgo to park\b/gi, replace: 'go to the park' },
-        { find: /\bwent to park\b/gi, replace: 'went to the park' },
-        { find: /\bcome yesterday school\b/gi, replace: 'came to school yesterday' },
-        { find: /\bgo yesterday school\b/gi, replace: 'went to school yesterday' },
-        { find: /\bcome school\b/gi, replace: 'come to school' },
-        { find: /\bgo school\b/gi, replace: 'go to school' },
-        { find: /\byeasterday\b/gi, replace: 'yesterday' }
+      // Complex grammar patterns with detailed explanations
+      const grammarPatterns = [
+        {
+          pattern: /\bhe say me that\b/gi,
+          replacement: 'he told me that',
+          explanation: 'Changed "say me" to "told me" - correct reporting verb structure',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bdont has no\b/gi,
+          replacement: "doesn't have any",
+          explanation: 'Fixed double negative "dont has no" to "doesn\'t have any"',
+          type: 'grammar'
+        },
+        {
+          pattern: /\byestarday\b/gi,
+          replacement: 'yesterday',
+          explanation: 'Corrected spelling: "yestarday" → "yesterday"',
+          type: 'spelling'
+        },
+        {
+          pattern: /\bhe go\b/gi,
+          replacement: 'he goes',
+          explanation: 'Added "s" for third person singular present tense',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bshe go\b/gi,
+          replacement: 'she goes',
+          explanation: 'Added "s" for third person singular present tense',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bi go (.+) yesterday\b/gi,
+          replacement: 'I went $1 yesterday',
+          explanation: 'Changed "go" to "went" for past tense with "yesterday"',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bdon't have no\b/gi,
+          replacement: "don't have any",
+          explanation: 'Corrected double negative construction',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bmuch people\b/gi,
+          replacement: 'many people',
+          explanation: 'Use "many" with countable nouns like "people"',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bmore better\b/gi,
+          replacement: 'better',
+          explanation: 'Removed redundant "more" - "better" is already comparative',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bi are\b/gi,
+          replacement: 'I am',
+          explanation: 'Corrected subject-verb agreement: "I" takes "am"',
+          type: 'grammar'
+        },
+        {
+          pattern: /\byou is\b/gi,
+          replacement: 'you are',
+          explanation: 'Corrected subject-verb agreement: "you" takes "are"',
+          type: 'grammar'
+        }
       ];
       
-      corrections.forEach(correction => {
-        fallbackCorrected = fallbackCorrected.replace(correction.find, correction.replace);
-      });
+      // Apply each pattern and track changes
+      let hasChanges = false;
+      for (const pattern of grammarPatterns) {
+        if (pattern.pattern.test(fallbackCorrected)) {
+          const originalMatch = fallbackCorrected.match(pattern.pattern)?.[0] || '';
+          fallbackCorrected = fallbackCorrected.replace(pattern.pattern, pattern.replacement);
+          detailedCorrections.push({
+            original: originalMatch,
+            corrected: pattern.replacement,
+            explanation: pattern.explanation,
+            type: pattern.type
+          });
+          hasChanges = true;
+        }
+      }
       
       // Generate more varied conversational responses based on input
       const lowerInput = input.toLowerCase();
@@ -135,7 +182,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         corrected: fallbackCorrected,
         reply: randomResponse,
-        hasCorrections: fallbackCorrected !== input
+        hasCorrections: hasChanges,
+        corrections: detailedCorrections
       });
     }
   });
@@ -226,25 +274,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Fallback bilingual corrections
+      // Enhanced fallback bilingual corrections with detailed analysis
       const input = userInput.toLowerCase();
       let corrected = userInput;
       let englishExplanation = 'No corrections needed';
       let nativeExplanation = 'No corrections needed';
+      let corrections = [];
 
-      // Apply basic corrections
-      if (input.includes('i go') && input.includes('yesterday')) {
-        corrected = userInput.replace(/i go/gi, 'I went');
-        englishExplanation = 'Changed "go" to "went" for past tense with "yesterday"';
-        nativeExplanation = targetLanguage === 'tamil' 
-          ? '"நேற்று" உடன் "go" ஐ "went" ஆக மாற்றினேன்'
-          : '"ඊයේ" සමග "go" "went" බවට වෙනස් කළා';
-      } else if (input.includes('he go') || input.includes('she go')) {
-        corrected = userInput.replace(/he go/gi, 'he goes').replace(/she go/gi, 'she goes');
-        englishExplanation = 'Added "s" to verb for third person singular';
-        nativeExplanation = targetLanguage === 'tamil'
-          ? 'மூன்றாம் நபர் ஒருமைக்கு வினைச்சொல்லில் "s" சேர்த்தேன்'
-          : 'තුන්වන පුද්ගලයා සඳහා ක්‍රියාපදයට "s" එකතු කළා';
+      // Comprehensive grammar pattern matching
+      const grammarFixes = [
+        {
+          pattern: /\bi go (.+) yesterday\b/gi,
+          replacement: 'I went $1 yesterday',
+          explanation: 'Changed "go" to "went" for past tense with "yesterday"',
+          tamilExplanation: '"நேற்று" உடன் "go" ஐ "went" ஆக மாற்றினேன்',
+          sinhalaExplanation: '"ඊයේ" සමග "go" "went" බවට වෙනස් කළා'
+        },
+        {
+          pattern: /\bhe go\b/gi,
+          replacement: 'he goes',
+          explanation: 'Added "s" to verb for third person singular',
+          tamilExplanation: 'மூன்றாம் நபர் ஒருமைக்கு வினைச்சொல்லில் "s" சேர்த்தேன்',
+          sinhalaExplanation: 'තුන්වන පුද්ගලයා සඳහා ක්‍රියාපදයට "s" එකතු කළා'
+        },
+        {
+          pattern: /\bshe go\b/gi,
+          replacement: 'she goes',
+          explanation: 'Added "s" to verb for third person singular',
+          tamilExplanation: 'மூன්றாம் நபர் ஒருমைக்கு வினைச்சொல்லில் "s" சேர்த்தேன்',
+          sinhalaExplanation: 'තුන්වන පුද්ගලයා සඳහා ක්‍රියාපදයට "s" එකතු කළා'
+        },
+        {
+          pattern: /\bdont has\b/gi,
+          replacement: "doesn't have",
+          explanation: 'Corrected double negative and contraction',
+          tamilExplanation: 'இரட்டை மறுப்பு மற்றும் சுருக்கத்தை சரி செய்தேன்',
+          sinhalaExplanation: 'ද්විත්ව නිෂේධන සහ සංකෝචනය නිවැරදි කළා'
+        },
+        {
+          pattern: /\byestarday\b/gi,
+          replacement: 'yesterday',
+          explanation: 'Corrected spelling error',
+          tamilExplanation: 'எழுத்துப்பிழையை சரி செய்தேன்',
+          sinhalaExplanation: 'අක්ෂර වින්‍යාස දෝෂය නිවැරදි කළා'
+        }
+      ];
+
+      for (const fix of grammarFixes) {
+        if (fix.pattern.test(corrected)) {
+          const originalText = corrected.match(fix.pattern)?.[0] || '';
+          corrected = corrected.replace(fix.pattern, fix.replacement);
+          corrections.push({
+            original: originalText,
+            corrected: fix.replacement,
+            explanation: fix.explanation,
+            type: 'grammar'
+          });
+          englishExplanation = fix.explanation;
+          nativeExplanation = targetLanguage === 'tamil' ? fix.tamilExplanation : fix.sinhalaExplanation;
+          break;
+        }
       }
 
       const responses = [
@@ -259,7 +348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         corrected,
         englishExplanation,
         nativeExplanation,
-        reply
+        reply,
+        corrections
       });
     } catch (error) {
       console.error('Bilingual correction error:', error);
