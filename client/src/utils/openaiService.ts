@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 const getApiKey = () => {
   // In a browser environment, the API key should come from environment variables
   // For security, this should ideally be handled by a backend proxy in production
-  return import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '';
+  return import.meta.env.VITE_OPENAI_API_KEY || '';
 };
 
 let openai: OpenAI | null = null;
