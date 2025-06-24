@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Dashboard from './components/Dashboard';
 import LessonInterface from './components/LessonInterface';
 import LearningPlan from './components/LearningPlan';
+import LevelBasedLearningPlan from './components/LevelBasedLearningPlan';
 import OnboardingFlow, { OnboardingData } from './components/OnboardingFlow';
 import PlacementTest from './components/PlacementTest';
 import DailyChallenge from './components/DailyChallenge';
@@ -260,6 +261,7 @@ function App() {
   const [showVocabularyTrainer, setShowVocabularyTrainer] = useState(false);
   const [showWritingAssistant, setShowWritingAssistant] = useState(false);
   const [showPronunciationTrainer, setShowPronunciationTrainer] = useState(false);
+  const [showLevelBasedPlan, setShowLevelBasedPlan] = useState(false);
   
   // 30-day plan state
   const [currentDay, setCurrentDay] = useState(1);
@@ -296,7 +298,7 @@ function App() {
         difficultyLevel: userData.preferences.difficultyLevel,
         focusAreas: userData.preferences.focusAreas || [],
         nativeLanguage: userData.preferences.nativeLanguage || 'English',
-        learningGoals: userData.preferences.learningGoals
+        learningGoals: userData.preferences.learningGoals || []
       }
     };
 
@@ -494,7 +496,7 @@ function App() {
   };
 
   const handleShowPlan = () => {
-    setCurrentView('plan');
+    setShowLevelBasedPlan(true);
   };
 
   const handleBackToDashboard = () => {
@@ -614,6 +616,26 @@ function App() {
             setShowPronunciationTrainer(false);
           }}
           onClose={() => setShowPronunciationTrainer(false)}
+        />
+      )}
+
+      {showLevelBasedPlan && user && userProgress && (
+        <LevelBasedLearningPlan
+          userLevel={user.englishLevel}
+          currentDay={currentDay}
+          completedDays={completedDays}
+          onStartDay={handleStartDay}
+          onBack={() => setShowLevelBasedPlan(false)}
+          onChangeTrack={(track) => {
+            console.log('Track changed to:', track.name);
+            // Update user level if needed
+            if (user.englishLevel !== track.level) {
+              userDataManager.updateUserPreferences({
+                difficultyLevel: track.level
+              });
+              loadUserData();
+            }
+          }}
         />
       )}
     </div>
