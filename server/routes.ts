@@ -57,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let fallbackCorrected = input;
       let detailedCorrections = [];
       
-      // Complex grammar patterns with detailed explanations
+      // Comprehensive grammar patterns with detailed explanations
       const grammarPatterns = [
         {
           pattern: /\bhe say me that\b/gi,
@@ -76,6 +76,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           replacement: 'yesterday',
           explanation: 'Corrected spelling: "yestarday" → "yesterday"',
           type: 'spelling'
+        },
+        {
+          pattern: /\bi not go\b/gi,
+          replacement: "I didn't go",
+          explanation: 'Corrected negative past tense: "not go" → "didn\'t go"',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bi sick\b/gi,
+          replacement: 'I was sick',
+          explanation: 'Added missing verb "was" to complete the sentence',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bi drink yesterday water\b/gi,
+          replacement: 'I drank water yesterday',
+          explanation: 'Corrected word order and past tense: "drink yesterday water" → "drank water yesterday"',
+          type: 'grammar'
         },
         {
           pattern: /\bhe go\b/gi,
@@ -123,6 +141,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           pattern: /\byou is\b/gi,
           replacement: 'you are',
           explanation: 'Corrected subject-verb agreement: "you" takes "are"',
+          type: 'grammar'
+        },
+        {
+          pattern: /\b(i|he|she|it|we|they)\s+([a-z]+)\s+yesterday\s+([a-z]+)\b/gi,
+          replacement: (match, subject, verb, object) => {
+            const pastTense = {
+              'drink': 'drank',
+              'eat': 'ate',
+              'go': 'went',
+              'come': 'came',
+              'see': 'saw',
+              'buy': 'bought',
+              'make': 'made',
+              'take': 'took',
+              'give': 'gave'
+            };
+            const pastVerb = pastTense[verb.toLowerCase()] || verb + 'ed';
+            return `${subject} ${pastVerb} ${object} yesterday`;
+          },
+          explanation: 'Corrected word order and past tense form',
           type: 'grammar'
         }
       ];

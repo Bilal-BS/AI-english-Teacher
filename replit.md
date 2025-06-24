@@ -142,6 +142,10 @@ Recent Updates:
 - June 24, 2025: Added detailed word-by-word analysis with explanations for every correction
 - June 24, 2025: Enhanced OpenAI prompts for advanced grammar analysis and feedback
 - June 24, 2025: Created detailed correction parsing with original→corrected format
+- June 24, 2025: Simplified OpenAI prompt for better clarity and teacher-like responses
+- June 24, 2025: Enhanced fallback system with 15+ complex grammar patterns including word order
+- June 24, 2025: Added bilingual correction display in conversation practice UI
+- June 24, 2025: Fixed all conversation state management and turn counting issues
 
 ## User Preferences
 

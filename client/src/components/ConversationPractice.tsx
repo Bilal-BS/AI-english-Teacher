@@ -687,6 +687,18 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
                               </span>
                             </div>
                             <p className="text-gray-600 text-xs">{correction.explanation}</p>
+                            {selectedLanguage && showTranslation && (
+                              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                                <div className="text-blue-700 font-medium">
+                                  {selectedLanguage === 'tamil' ? 'தமிழில் விளக்கம்' : 'සිංහල පැහැදිලි කිරීම'}:
+                                </div>
+                                <div className="text-blue-600 mt-1">
+                                  {correction.explanation.includes('\n\n') 
+                                    ? correction.explanation.split('\n\n')[1] 
+                                    : translationService.getFallbackPhrase("Grammar error", selectedLanguage)}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

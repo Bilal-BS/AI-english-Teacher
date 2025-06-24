@@ -9,27 +9,19 @@ export async function getCorrectedConversation(userInput: string, conversationHi
     throw new Error('OpenAI API key not configured');
   }
 
-  const prompt = `
-You are an advanced English grammar expert and tutor.
+  const prompt = `Correct this English sentence and reply like a teacher. Show correction and explain changes.
 
-Your task:
-1. Analyze every word in the user's sentence for grammar, spelling, and usage errors
-2. Provide detailed corrections with explanations for each error
-3. Give a natural conversational reply
-
-Respond in this exact format:
-Corrected: <the corrected sentence>
+Format:
+Corrected: <corrected sentence>
 Corrections:
-- "<wrong word/phrase>" → "<correct word/phrase>": <detailed explanation>
-- "<wrong word/phrase>" → "<correct word/phrase>": <detailed explanation>
-Reply: <friendly natural response>
+- "<wrong>" → "<correct>": <explanation>
+Reply: <teacher response>
 
-User: ${userInput}
-`;
+Sentence: ${userInput}`;
 
   // Build messages array with conversation history
   const messages = [
-    { role: "system", content: "You are an advanced grammar expert and English tutor who provides detailed corrections like Grammarly." },
+    { role: "system", content: "You are a helpful English tutor who corrects grammar and explains changes clearly." },
     ...conversationHistory.slice(-6), // Keep last 6 messages for context
     { role: "user", content: prompt }
   ];
@@ -37,8 +29,8 @@ User: ${userInput}
   const response = await openai.chat.completions.create({
     model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     messages: messages,
-    temperature: 0.6, // Balanced for detailed corrections but natural responses
-    max_tokens: 300, // More tokens for detailed explanations
+    temperature: 0.6,
+    max_tokens: 300,
   });
 
   return response.choices[0].message.content;
