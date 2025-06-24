@@ -171,45 +171,68 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
       let aiResponse: string;
       let corrections = null;
 
-      if (openaiService.isConfigured()) {
-        // Use combined auto-correction + conversation if auto-correct is enabled
-        if (autoCorrectEnabled) {
-          setIsGettingCorrection(true);
-          try {
-            const result = await openaiService.chatWithAutoCorrection(content, `Conversation about ${topicTitle}`);
-            aiResponse = result.reply;
-            corrections = {
-              hasErrors: result.hasCorrections,
-              correctedText: result.corrected,
-              corrections: result.corrections,
-              encouragement: "Great job practicing! Keep going.",
-              grammarScore: result.hasCorrections ? 85 : 95
-            };
-          } catch (error) {
-            console.error('Error with auto-correction:', error);
-            // Fallback to regular chat
-            aiResponse = await openaiService.chatWithAI([{ role: 'user', content }], `Conversation about ${topicTitle}`);
-          }
-          setIsGettingCorrection(false);
-        } else {
-          // Regular conversation without auto-correction - use backend API
-          try {
-            const response = await fetch('/api/conversation', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ userInput: content })
-            });
-            
-            const result = await response.json();
-            aiResponse = result.reply;
-          } catch (error) {
-            console.error('Backend API error:', error);
-            aiResponse = generateFallbackResponse(content, conversationTopic);
-          }
+      // Prepare conversation history for context
+      const conversationHistory = messages.slice(-6).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      if (autoCorrectEnabled) {
+        setIsGettingCorrection(true);
+        try {
+          const response = await fetch('/api/conversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              userInput: content,
+              conversationHistory 
+            })
+          });
+          
+          const result = await response.json();
+          aiResponse = result.reply;
+          corrections = {
+            hasErrors: result.hasCorrections,
+            correctedText: result.corrected,
+            corrections: result.hasCorrections ? [{
+              original: content,
+              corrected: result.corrected,
+              explanation: "Grammar and spelling improvements",
+              type: 'grammar' as const
+            }] : [],
+            encouragement: "Great job practicing! Keep going.",
+            grammarScore: result.hasCorrections ? 85 : 95
+          };
+        } catch (error) {
+          console.error('Error with auto-correction:', error);
+          aiResponse = generateFallbackResponse(content, conversationTopic);
         }
+        setIsGettingCorrection(false);
       } else {
+        // Regular conversation without auto-correction - use backend API
+        try {
+          const response = await fetch('/api/conversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              userInput: content,
+              conversationHistory 
+            })
+          });
+          
+          const result = await response.json();
+          aiResponse = result.reply;
+        } catch (error) {
+          console.error('Backend API error:', error);
+          aiResponse = generateFallbackResponse(content, conversationTopic);
+        }
+      }
+
+      if (!aiResponse) {
         console.log('OpenAI not configured, using fallback');
         aiResponse = generateFallbackResponse(content, conversationTopic);
       }
