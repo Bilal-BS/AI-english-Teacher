@@ -4,8 +4,8 @@ import OpenAI from 'openai';
 const getApiKey = () => {
   // In a browser environment, the API key should come from environment variables
   // For security, this should ideally be handled by a backend proxy in production
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || '';
-  console.log('API Key length:', apiKey ? apiKey.length : 0);
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
+  console.log('API Key configured:', apiKey ? 'Yes' : 'No');
   return apiKey;
 };
 
@@ -113,10 +113,11 @@ Provide response in JSON format:
 Focus on:
 - Major grammar errors that affect understanding
 - Word choice improvements for natural expression
-- Natural expression suggestions
-- Keep corrections helpful, not overwhelming (max 3 corrections)
-- Always provide encouragement
-- If the text is mostly correct, still provide encouragement but set hasErrors to false`;
+- Natural expression suggestions  
+- Only provide corrections if there are clear errors (don't nitpick)
+- Keep corrections helpful, not overwhelming (max 2 corrections)
+- Always provide encouragement regardless of errors
+- If the text is mostly correct, set hasErrors to false but still encourage`;
 
       const response = await client.chat.completions.create({
         model: 'gpt-4o',
@@ -287,8 +288,8 @@ Focus on:
   // Check if OpenAI is configured
   isConfigured(): boolean {
     const apiKey = getApiKey();
-    const hasKey = !!apiKey && apiKey.length > 10;
-    console.log('OpenAI API Key configured:', hasKey ? 'Yes' : 'No');
+    const hasKey = !!apiKey && apiKey.length > 10 && apiKey.startsWith('sk-');
+    console.log('OpenAI API Key configured:', hasKey ? 'Yes' : 'No', 'Length:', apiKey?.length || 0);
     return hasKey;
   }
 }
