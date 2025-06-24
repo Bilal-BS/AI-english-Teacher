@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Globe, Target, BookOpen, Brain, Users, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 
 interface OnboardingFlowProps {
@@ -82,7 +82,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   ];
 
-  const validateName = (name: string): boolean => {
+  const validateName = useCallback((name: string): boolean => {
     const trimmedName = name.trim();
     if (trimmedName.length < 2) {
       setNameError('Name must be at least 2 characters long');
@@ -98,7 +98,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
     setNameError('');
     return true;
-  };
+  }, []);
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -119,10 +119,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     setFormData(prev => ({ ...prev, ...updates }));
   };
 
-  const isStepValid = () => {
+  const isStepValid = useCallback(() => {
     switch (currentStep) {
       case 1:
-        return validateName(formData.name) && formData.nativeLanguage !== '';
+        return formData.name.trim().length >= 2 && formData.nativeLanguage !== '';
       case 2:
         return formData.goals.length > 0;
       case 4:
@@ -130,7 +130,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       default:
         return true;
     }
-  };
+  }, [currentStep, formData.name, formData.nativeLanguage, formData.goals.length, formData.focusAreas.length]);
 
   function WelcomeStep() {
     return (
