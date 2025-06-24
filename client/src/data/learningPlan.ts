@@ -8,96 +8,96 @@ export interface DayPlan {
 }
 
 export const thirtyDayPlan: DayPlan[] = [
-  // Week 1: Foundation Building
+  // Week 1: Foundation Building with Advanced Pronunciation
   {
     day: 1,
-    theme: "Getting Started - Basic Greetings",
-    lessons: ["Basic Greetings & Introductions", "Common Courtesy Phrases"],
-    goals: ["Master hello, goodbye, please, thank you", "Practice clear pronunciation"],
+    theme: "Pronunciation Mastery - TH Sounds",
+    lessons: ["Advanced TH Sound Practice", "Common TH Words in Context", "Conversation with TH Focus"],
+    goals: ["Master /θ/ and /ð/ sounds perfectly", "Distinguish 'think' vs 'sink'", "Natural TH in conversation"],
     difficulty: 'beginner',
-    estimatedTime: 30
+    estimatedTime: 45
   },
   {
     day: 2,
-    theme: "Personal Information",
-    lessons: ["Introducing Yourself", "Talking About Your Family"],
-    goals: ["Share name, age, occupation", "Describe family members"],
-    difficulty: 'beginner',
-    estimatedTime: 35
-  },
-  {
-    day: 3,
-    theme: "Numbers and Time",
-    lessons: ["Numbers 1-100", "Telling Time"],
-    goals: ["Count confidently", "Ask and tell time"],
-    difficulty: 'beginner',
-    estimatedTime: 40
-  },
-  {
-    day: 4,
-    theme: "Daily Routines",
-    lessons: ["Morning Routines", "Daily Activities"],
-    goals: ["Describe your day", "Use present tense verbs"],
-    difficulty: 'beginner',
-    estimatedTime: 35
-  },
-  {
-    day: 5,
-    theme: "Food and Drinks",
-    lessons: ["Ordering Food", "Favorite Foods"],
-    goals: ["Order at restaurants", "Express preferences"],
-    difficulty: 'beginner',
-    estimatedTime: 40
-  },
-  {
-    day: 6,
-    theme: "Directions and Places",
-    lessons: ["Asking for Directions", "Common Places"],
-    goals: ["Navigate conversations", "Describe locations"],
-    difficulty: 'beginner',
-    estimatedTime: 45
-  },
-  {
-    day: 7,
-    theme: "Week 1 Review",
-    lessons: ["Conversation Practice", "Pronunciation Review"],
-    goals: ["Combine all week 1 skills", "Build confidence"],
+    theme: "R vs L Sound Perfection",
+    lessons: ["R Sound Mastery", "L Sound Techniques", "R/L Minimal Pairs Challenge"],
+    goals: ["Perfect R tongue position", "Clear L pronunciation", "95% accuracy in R/L distinction"],
     difficulty: 'beginner',
     estimatedTime: 50
   },
+  {
+    day: 3,
+    theme: "V vs W Sound Precision",
+    lessons: ["V Sound Techniques", "W Sound Practice", "V/W Discrimination Challenge"],
+    goals: ["Perfect lip-teeth contact for V", "Round lips properly for W", "100% V/W accuracy"],
+    difficulty: 'beginner',
+    estimatedTime: 45
+  },
+  {
+    day: 4,
+    theme: "Vowel Sound Mastery - Short vs Long",
+    lessons: ["Short I vs Long E", "Short U vs Long O", "Advanced Vowel Patterns"],
+    goals: ["Distinguish 'bit' vs 'beat'", "Master all 5 vowel pairs", "Natural vowel transitions"],
+    difficulty: 'intermediate',
+    estimatedTime: 50
+  },
+  {
+    day: 5,
+    theme: "Schwa Sound and Stress Patterns",
+    lessons: ["The Schwa Mystery", "Word Stress Rules", "Sentence Rhythm Practice"],
+    goals: ["Use schwa in unstressed syllables", "Apply stress patterns correctly", "Natural English rhythm"],
+    difficulty: 'intermediate',
+    estimatedTime: 55
+  },
+  {
+    day: 6,
+    theme: "Connected Speech and Linking",
+    lessons: ["Linking Words Together", "Reduction Patterns", "Fast Speech Practice"],
+    goals: ["Link words naturally", "Use contractions fluently", "Sound like native speaker"],
+    difficulty: 'advanced',
+    estimatedTime: 60
+  },
+  {
+    day: 7,
+    theme: "Week 1 Pronunciation Mastery Test",
+    lessons: ["Comprehensive Sound Test", "Real Conversation Challenge", "Error Correction Practice"],
+    goals: ["95% pronunciation accuracy", "Fluent natural conversation", "Self-correction ability"],
+    difficulty: 'advanced',
+    estimatedTime: 65
+  },
 
-  // Week 2: Building Confidence
+  // Week 2: Advanced Grammar with Perfect Correction
   {
     day: 8,
-    theme: "Weather and Seasons",
-    lessons: ["Weather Descriptions", "Seasonal Activities"],
-    goals: ["Discuss weather naturally", "Plan seasonal activities"],
-    difficulty: 'beginner',
-    estimatedTime: 35
+    theme: "Perfect Present Tense Mastery",
+    lessons: ["Present Simple Perfection", "Present Continuous Precision", "Present Perfect Challenge"],
+    goals: ["Zero present tense errors", "Natural tense transitions", "Perfect time expressions"],
+    difficulty: 'intermediate',
+    estimatedTime: 50
   },
   {
     day: 9,
-    theme: "Shopping and Money",
-    lessons: ["At the Store", "Prices and Payment"],
-    goals: ["Shop confidently", "Handle money conversations"],
+    theme: "Past Tense Perfection Challenge",
+    lessons: ["Regular Past Tense", "Irregular Verb Mastery", "Past Perfect Precision"],
+    goals: ["100% irregular verb accuracy", "Perfect past narratives", "Complex time relationships"],
     difficulty: 'intermediate',
-    estimatedTime: 40
+    estimatedTime: 55
   },
   {
     day: 10,
-    theme: "Transportation",
-    lessons: ["Public Transport", "Travel Plans"],
-    goals: ["Navigate transport systems", "Discuss travel"],
+    theme: "Future Forms Mastery",
+    lessons: ["Will vs Going To", "Future Perfect", "Future Continuous"],
+    goals: ["Choose correct future form", "Express future plans precisely", "Advanced future concepts"],
     difficulty: 'intermediate',
-    estimatedTime: 40
+    estimatedTime: 50
   },
   {
     day: 11,
-    theme: "Health and Body",
-    lessons: ["At the Doctor", "Body Parts and Health"],
-    goals: ["Describe symptoms", "Health conversations"],
-    difficulty: 'intermediate',
-    estimatedTime: 45
+    theme: "Article Mastery - A, An, The",
+    lessons: ["Definite Article Rules", "Indefinite Article Precision", "Zero Article Mastery"],
+    goals: ["Perfect article usage", "No article errors in speech", "Natural article flow"],
+    difficulty: 'advanced',
+    estimatedTime: 60
   },
   {
     day: 12,

@@ -3,6 +3,8 @@ import { Mic, MicOff, Volume2, Send, RotateCcw, CheckCircle, X, MessageCircle, B
 import { speechRecognition, SpeechRecognitionResult } from '../utils/speechRecognition';
 import { openaiService, ChatMessage } from '../utils/openaiService';
 import { translationService, BilingualCorrection } from '../utils/translationService';
+import { perfectErrorCorrector, PerfectCorrection } from '../utils/perfectErrorCorrection';
+import { advancedPronunciationAnalyzer, PronunciationAnalysis } from '../utils/advancedPronunciationAnalyzer';
 
 interface ConversationPracticeProps {
   onClose: () => void;
@@ -36,6 +38,8 @@ interface ConversationMessage {
     encouragement: string;
     grammarScore: number;
   };
+  perfectCorrection?: PerfectCorrection;
+  pronunciationAnalysis?: PronunciationAnalysis;
 }
 
 const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, onComplete }) => {
@@ -167,9 +171,39 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
         return;
       }
 
-      await handleUserMessage(result.transcript, true, result.confidence);
+      setIsProcessing(true);
+      
+      let perfectCorrection: PerfectCorrection | undefined;
+      let pronunciationAnalysis: PronunciationAnalysis | undefined;
+      
+      // Get comprehensive error correction
+      try {
+        perfectCorrection = await perfectErrorCorrector.getComprehensiveCorrection(result.transcript);
+        console.log('Perfect correction result:', perfectCorrection);
+      } catch (error) {
+        console.error('Perfect correction failed:', error);
+      }
+      
+      // Get pronunciation analysis if we have a target to compare against
+      try {
+        if (messages.length > 0) {
+          const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
+          if (lastAssistantMessage) {
+            pronunciationAnalysis = await advancedPronunciationAnalyzer.analyzePronunciation(
+              lastAssistantMessage.content,
+              result.transcript
+            );
+            console.log('Pronunciation analysis:', pronunciationAnalysis);
+          }
+        }
+      } catch (error) {
+        console.error('Pronunciation analysis failed:', error);
+      }
+
+      await handleUserMessageWithAnalysis(result.transcript, true, result.confidence, perfectCorrection, pronunciationAnalysis);
     } catch (error) {
       setIsRecording(false);
+      setIsProcessing(false);
       setError('Failed to process speech. Please try again.');
       console.error('Speech recognition error:', error);
     }
@@ -182,12 +216,30 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
 
   const handleTextSubmit = async () => {
     if (textInput.trim()) {
-      await handleUserMessage(textInput.trim(), false);
+      // Get perfect correction for text input
+      let perfectCorrection: PerfectCorrection | undefined;
+      try {
+        perfectCorrection = await perfectErrorCorrector.getComprehensiveCorrection(textInput.trim());
+      } catch (error) {
+        console.error('Perfect correction failed:', error);
+      }
+      
+      await handleUserMessageWithAnalysis(textInput.trim(), false, undefined, perfectCorrection);
       setTextInput('');
     }
   };
 
   const handleUserMessage = async (content: string, isSpoken: boolean = false, confidence?: number) => {
+    await handleUserMessageWithAnalysis(content, isSpoken, confidence);
+  };
+
+  const handleUserMessageWithAnalysis = async (
+    content: string, 
+    isSpoken: boolean = false, 
+    confidence?: number,
+    perfectCorrection?: PerfectCorrection,
+    pronunciationAnalysis?: PronunciationAnalysis
+  ) => {
     setIsProcessing(true);
     
     // Update turn count for scoring
@@ -298,7 +350,9 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
           corrections: corrections.corrections || [],
           encouragement: corrections.encouragement,
           grammarScore: corrections.grammarScore || 85
-        } : undefined
+        } : undefined,
+        perfectCorrection,
+        pronunciationAnalysis
       };
 
       setMessages(prev => [...prev, userMessage]);

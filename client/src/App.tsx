@@ -7,6 +7,7 @@ import PlacementTest from './components/PlacementTest';
 import DailyChallenge from './components/DailyChallenge';
 import VocabularyTrainer from './components/VocabularyTrainer';
 import WritingAssistant from './components/WritingAssistant';
+import PerfectPronunciationTrainer from './components/PerfectPronunciationTrainer';
 import { Lesson, UserProgress, Achievement, User, PlacementTestResult } from './types';
 import { userDataManager } from './utils/userDataManager';
 import { enhancedLessons } from './data/enhancedLessons';

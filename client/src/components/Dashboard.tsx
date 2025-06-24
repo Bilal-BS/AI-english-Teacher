@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, Award, Target, Calendar, Play, BookOpen, Mic, Volume2, Map, Zap, Trophy, PenTool, Brain, Star, Users, Globe, MessageCircle } from 'lucide-react';
+import { BarChart3, Award, Target, Calendar, Play, BookOpen, Mic, Volume2, Map, Zap, Trophy, PenTool, Brain, Star, Users, Globe, MessageCircle, CheckCircle } from 'lucide-react';
 import { UserProgress, Lesson } from '../types';
 import LessonCard from './LessonCard';
 import ProgressCard from './ProgressCard';
@@ -9,6 +9,7 @@ import PersonalizedGoals from './PersonalizedGoals';
 import InteractiveLessons from './InteractiveLessons';
 import ConversationPractice from './ConversationPractice';
 import FillInTheBlanks from './FillInTheBlanks';
+import PerfectPronunciationTrainer from './PerfectPronunciationTrainer';
 
 interface DashboardProps {
   userProgress: UserProgress;
@@ -18,6 +19,7 @@ interface DashboardProps {
   onShowDailyChallenge?: () => void;
   onShowVocabularyTrainer?: () => void;
   onShowWritingAssistant?: () => void;
+  onShowPronunciationTrainer?: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -27,13 +29,15 @@ const Dashboard: React.FC<DashboardProps> = ({
   onShowPlan,
   onShowDailyChallenge,
   onShowVocabularyTrainer,
-  onShowWritingAssistant
+  onShowWritingAssistant,
+  onShowPronunciationTrainer
 }) => {
   const [showCommunity, setShowCommunity] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
   const [showInteractiveLessons, setShowInteractiveLessons] = useState(false);
   const [showConversationPractice, setShowConversationPractice] = useState(false);
   const [showFillInTheBlanks, setShowFillInTheBlanks] = useState(false);
+  const [showPronunciationTrainer, setShowPronunciationTrainer] = useState(false);
 
   const completionRate = Math.round((userProgress.completedLessons / userProgress.totalLessons) * 100);
   const dailyProgress = Math.round((userProgress.lessonsToday / userProgress.dailyGoal) * 100);
@@ -60,6 +64,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleFillBlanksComplete = (score: number) => {
     console.log(`Fill in the blanks completed with score: ${score}`);
     setShowFillInTheBlanks(false);
+  };
+
+  const handlePronunciationTrainerComplete = (score: number) => {
+    console.log(`Pronunciation training completed with score: ${score}`);
+    setShowPronunciationTrainer(false);
   };
 
   return (
@@ -255,27 +264,40 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* 30-Day Plan CTA */}
+        {/* Enhanced 30-Day Plan CTA */}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-lg p-8 mb-8 text-white">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <h2 className="text-2xl font-bold mb-2">🚀 30-Day English Mastery Journey</h2>
               <p className="text-lg opacity-90 mb-4">
-                Follow our structured learning path designed by language experts. 
-                Transform your English speaking skills in just one month!
+                Master perfect pronunciation, eliminate grammar errors, and speak with confidence. 
+                Our enhanced journey includes advanced sound identification and perfect error correction!
               </p>
-              <div className="flex items-center space-x-6 text-sm opacity-80">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm opacity-80 mb-4">
                 <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>Daily lessons</span>
+                  <Volume2 className="w-4 h-4" />
+                  <span>TH, R/L Sound Mastery</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Target className="w-4 h-4" />
-                  <span>Progressive difficulty</span>
+                  <span>95% Accuracy Goal</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Perfect Error Correction</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Award className="w-4 h-4" />
-                  <span>Achievement system</span>
+                  <span>Native-like Fluency</span>
+                </div>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-3">
+                <div className="text-sm font-medium mb-1">Enhanced Features:</div>
+                <div className="text-xs opacity-90 space-y-1">
+                  <div>• Advanced pronunciation analyzer with phoneme-level feedback</div>
+                  <div>• Perfect grammar correction like Grammarly with detailed explanations</div>
+                  <div>• Bilingual error correction in Tamil and Sinhala</div>
+                  <div>• Connected speech patterns and natural linking practice</div>
                 </div>
               </div>
             </div>
@@ -285,7 +307,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 className="bg-white text-purple-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
               >
                 <Map className="w-5 h-5" />
-                <span>View Learning Plan</span>
+                <span>Start Mastery Journey</span>
               </button>
             </div>
           </div>
@@ -311,7 +333,10 @@ const Dashboard: React.FC<DashboardProps> = ({
               <span className="text-sm font-medium">Conversation</span>
             </button>
             
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105">
+            <button 
+              onClick={() => setShowPronunciationTrainer(true)}
+              className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105"
+            >
               <Volume2 className="w-8 h-8 mb-2" />
               <span className="text-sm font-medium">Pronunciation</span>
             </button>
