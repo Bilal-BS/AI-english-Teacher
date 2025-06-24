@@ -1,12 +1,17 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
+// Get API key from multiple possible sources
 const getApiKey = () => {
-  // In a browser environment, the API key should come from environment variables
-  // For security, this should ideally be handled by a backend proxy in production
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
-  console.log('API Key configured:', apiKey ? 'Yes' : 'No');
-  return apiKey;
+  // Check environment variables in order of preference
+  const envKey = import.meta.env.VITE_OPENAI_API_KEY;
+  
+  if (envKey && envKey.length > 10 && envKey.startsWith('sk-')) {
+    console.log('API Key loaded from environment');
+    return envKey;
+  }
+  
+  console.log('No valid API Key found in environment');
+  return '';
 };
 
 let openai: OpenAI | null = null;

@@ -114,6 +114,10 @@ Recent Updates:
 - December 30, 2024: Enhanced achievement system with 15 different badges
 - December 30, 2024: Configured OpenAI API integration with proper error handling
 - December 30, 2024: Implemented pronunciation analyzer and vocabulary trainer
+- June 24, 2025: Fixed conversation practice repetitive responses with enhanced fallback system
+- June 24, 2025: Added auto-correction feature with visual feedback display
+- June 24, 2025: Improved conversation variety with response tracking and 8 different response patterns
+- June 24, 2025: Enhanced placement test validation and fill-blank question handling
 
 ## User Preferences
 

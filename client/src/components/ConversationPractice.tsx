@@ -273,22 +273,37 @@ IMPORTANT: Respond as if you're having a real conversation with a friend, not gi
 
   const generateFallbackResponse = (userInput: string, topic: string): string => {
     const lowerInput = userInput.toLowerCase();
+    const timestamp = Date.now();
+    const messageId = Math.random().toString(36).substring(7);
     
-    // More dynamic responses based on user input and conversation length
+    // Create more varied responses using multiple strategies
     const responseStrategies = {
       'daily-routine': {
         questions: [
           "What time do you usually wake up?",
-          "Do you have a morning routine?",
+          "Do you have a morning routine?", 
           "What's the best part of your day?",
           "How do you relax in the evening?",
-          "Do weekends look different for you?"
+          "Do weekends look different for you?",
+          "What do you usually have for breakfast?",
+          "How long does it take you to get ready?",
+          "Do you prefer mornings or evenings?",
+          "What's your favorite way to start the day?",
+          "How do you prepare for tomorrow?",
+          "What time do you usually go to bed?",
+          "Do you have any evening rituals?"
         ],
         reactions: [
           "That sounds well organized!",
           "I can see you have a good routine.",
           "That's a healthy approach to your day.",
-          "It sounds like you manage your time well."
+          "It sounds like you manage your time well.",
+          "That's really interesting!",
+          "I like that approach.",
+          "That makes a lot of sense.",
+          "Wow, that's quite different from mine!",
+          "That sounds very peaceful.",
+          "I can relate to that!"
         ]
       },
       'hobbies': {
@@ -297,13 +312,26 @@ IMPORTANT: Respond as if you're having a real conversation with a friend, not gi
           "Do you practice that hobby regularly?",
           "Have you learned any new skills recently?",
           "What draws you to that activity?",
-          "Do you have a favorite place to do that?"
+          "Do you have a favorite place to do that?",
+          "How much time do you spend on this hobby?",
+          "Have you met others who share this interest?",
+          "What's the most challenging part?",
+          "Do you have any goals with this hobby?",
+          "What equipment or tools do you use?",
+          "Have you taught anyone else?",
+          "What got you started with this?"
         ],
         reactions: [
           "That hobby sounds really engaging!",
           "I can tell you're passionate about that.",
           "That's a creative way to spend time.",
-          "It sounds like you really enjoy that."
+          "It sounds like you really enjoy that.",
+          "That's fascinating!",
+          "How exciting!",
+          "That sounds like so much fun!",
+          "What a unique hobby!",
+          "I've always been curious about that.",
+          "That takes real dedication!"
         ]
       },
       'travel': {
@@ -370,18 +398,81 @@ IMPORTANT: Respond as if you're having a real conversation with a friend, not gi
 
     const currentTopic = responseStrategies[topic as keyof typeof responseStrategies] || responseStrategies['daily-routine'];
     
-    // Use conversation turn count to vary response types
-    const isQuestion = turnCount % 3 === 0; // Ask questions every 3rd turn
-    const useReaction = lowerInput.includes('yes') || lowerInput.includes('no') || lowerInput.includes('like') || lowerInput.includes('love');
+    // Create more varied responses using multiple factors
+    const messageLength = userInput.trim().length;
+    const hasGreeting = lowerInput.includes('hi') || lowerInput.includes('hello') || lowerInput.includes('hey');
+    const hasQuestion = userInput.includes('?');
+    const isShortResponse = messageLength < 10;
     
-    if (isQuestion && !useReaction) {
-      const randomQuestion = currentTopic.questions[Math.floor(Math.random() * currentTopic.questions.length)];
-      return randomQuestion;
-    } else {
-      const randomReaction = currentTopic.reactions[Math.floor(Math.random() * currentTopic.reactions.length)];
-      const followUpQuestion = currentTopic.questions[Math.floor(Math.random() * currentTopic.questions.length)];
-      return `${randomReaction} ${followUpQuestion}`;
+    // Use timestamp and message content to create more variation
+    const responseIndex = (timestamp + messageLength + turnCount) % 100;
+    const reactionIndex = Math.floor(responseIndex / 20) % currentTopic.reactions.length;
+    const questionIndex = Math.floor(responseIndex / 10) % currentTopic.questions.length;
+    
+    // Create highly varied response patterns
+    const responseType = (timestamp + turnCount * 3 + messageLength) % 8;
+    
+    // Track used responses to avoid immediate repetition
+    const conversationState = {
+      lastReactionIndex: localStorage.getItem(`lastReaction_${topic}`) ? parseInt(localStorage.getItem(`lastReaction_${topic}`)!) : -1,
+      lastQuestionIndex: localStorage.getItem(`lastQuestion_${topic}`) ? parseInt(localStorage.getItem(`lastQuestion_${topic}`)!) : -1
+    };
+    
+    // Ensure we don't repeat the same reaction or question immediately
+    let finalReactionIndex = reactionIndex;
+    let finalQuestionIndex = questionIndex;
+    
+    if (finalReactionIndex === conversationState.lastReactionIndex) {
+      finalReactionIndex = (finalReactionIndex + 1) % currentTopic.reactions.length;
     }
+    
+    if (finalQuestionIndex === conversationState.lastQuestionIndex) {
+      finalQuestionIndex = (finalQuestionIndex + 1) % currentTopic.questions.length;
+    }
+    
+    // Store for next time
+    localStorage.setItem(`lastReaction_${topic}`, finalReactionIndex.toString());
+    localStorage.setItem(`lastQuestion_${topic}`, finalQuestionIndex.toString());
+    
+    let response = '';
+    
+    switch (responseType) {
+      case 0: // Greeting response
+        if (hasGreeting && turnCount <= 2) {
+          response = `Hello! Great to chat with you! ${currentTopic.questions[finalQuestionIndex]}`;
+        } else {
+          response = currentTopic.questions[finalQuestionIndex];
+        }
+        break;
+      case 1: // Reaction + Question
+        response = `${currentTopic.reactions[finalReactionIndex]} ${currentTopic.questions[finalQuestionIndex]}`;
+        break;
+      case 2: // Just question
+        response = currentTopic.questions[finalQuestionIndex];
+        break;
+      case 3: // Enthusiastic reaction + question
+        response = `${currentTopic.reactions[finalReactionIndex]}! ${currentTopic.questions[finalQuestionIndex]}`;
+        break;
+      case 4: // Acknowledgment + new topic
+        const altQuestionIndex = (finalQuestionIndex + 2) % currentTopic.questions.length;
+        response = `I see! ${currentTopic.questions[altQuestionIndex]}`;
+        break;
+      case 5: // Two-part response
+        const secondQuestionIndex = (finalQuestionIndex + 3) % currentTopic.questions.length;
+        response = `${currentTopic.reactions[finalReactionIndex]} ${currentTopic.questions[secondQuestionIndex]}`;
+        break;
+      case 6: // Encouraging response
+        response = `That's interesting! ${currentTopic.questions[finalQuestionIndex]}`;
+        break;
+      default: // Contextual response
+        if (lowerInput.includes('yes') || lowerInput.includes('no')) {
+          response = `${currentTopic.reactions[finalReactionIndex]} ${currentTopic.questions[finalQuestionIndex]}`;
+        } else {
+          response = `${currentTopic.reactions[finalReactionIndex]} Tell me more about that!`;
+        }
+    }
+    
+    return response;
   };
 
   const resetConversation = () => {
@@ -394,6 +485,12 @@ IMPORTANT: Respond as if you're having a real conversation with a friend, not gi
     setIsGettingCorrection(false);
     setIsProcessing(false);
     setAutoCorrectEnabled(true);
+    // Clear conversation state for fresh responses
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('lastReaction_') || key.startsWith('lastQuestion_')) {
+        localStorage.removeItem(key);
+      }
+    });
   };
 
   const endConversation = () => {
