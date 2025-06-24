@@ -192,15 +192,22 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
           }
           setIsGettingCorrection(false);
         } else {
-          // Regular conversation without auto-correction
-          const chatMessages: ChatMessage[] = messages.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          }));
-          chatMessages.push({ role: 'user', content });
-          
-          const context = `You are an engaging English conversation teacher discussing ${topicTitle}. Be encouraging and ask follow-up questions.`;
-          aiResponse = await openaiService.chatWithAI(chatMessages, context);
+          // Regular conversation without auto-correction - use backend API
+          try {
+            const response = await fetch('/api/conversation', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ userInput: content })
+            });
+            
+            const result = await response.json();
+            aiResponse = result.reply;
+          } catch (error) {
+            console.error('Backend API error:', error);
+            aiResponse = generateFallbackResponse(content, conversationTopic);
+          }
         }
       } else {
         console.log('OpenAI not configured, using fallback');

@@ -31,19 +31,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('OpenAI API Error:', error);
       
-      // Provide fallback correction for common grammar errors
+      // Enhanced fallback correction for common grammar errors
       const input = req.body.userInput || '';
       let fallbackCorrected = input;
       
-      // Basic corrections
-      fallbackCorrected = fallbackCorrected.replace(/\bhe go\b/gi, 'he goes');
-      fallbackCorrected = fallbackCorrected.replace(/\bshe go\b/gi, 'she goes');
-      fallbackCorrected = fallbackCorrected.replace(/\bi are\b/gi, 'I am');
-      fallbackCorrected = fallbackCorrected.replace(/\byesterday\b/gi, 'yesterday');
+      // Common grammar patterns
+      const corrections = [
+        { find: /\bhe go\b/gi, replace: 'he goes' },
+        { find: /\bshe go\b/gi, replace: 'she goes' },
+        { find: /\bit go\b/gi, replace: 'it goes' },
+        { find: /\bhe don't\b/gi, replace: 'he doesn\'t' },
+        { find: /\bshe don't\b/gi, replace: 'she doesn\'t' },
+        { find: /\bit don't\b/gi, replace: 'it doesn\'t' },
+        { find: /\bi are\b/gi, replace: 'I am' },
+        { find: /\byou is\b/gi, replace: 'you are' },
+        { find: /\bwas went\b/gi, replace: 'went' },
+        { find: /\bhave went\b/gi, replace: 'have gone' },
+        { find: /\byestarday\b/gi, replace: 'yesterday' },
+        { find: /\btommorow\b/gi, replace: 'tomorrow' },
+        { find: /\brecieve\b/gi, replace: 'receive' },
+        { find: /\bseperate\b/gi, replace: 'separate' },
+        { find: /\bmuch people\b/gi, replace: 'many people' },
+        { find: /\bmore better\b/gi, replace: 'better' },
+        { find: /\bdon't have no\b/gi, replace: 'don\'t have any' }
+      ];
+      
+      corrections.forEach(correction => {
+        fallbackCorrected = fallbackCorrected.replace(correction.find, correction.replace);
+      });
+      
+      // Generate conversational responses
+      const responses = [
+        "That sounds interesting! Can you tell me more?",
+        "Great! What happened next?",
+        "That's nice! How did you feel about it?",
+        "Interesting! What do you think about that?",
+        "That's cool! Do you do that often?",
+        "Sounds good! What was your favorite part?",
+        "That's wonderful! Would you recommend it to others?"
+      ];
+      
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       
       res.json({ 
         corrected: fallbackCorrected,
-        reply: "That's interesting! Tell me more about that.",
+        reply: randomResponse,
         hasCorrections: fallbackCorrected !== input
       });
     }
