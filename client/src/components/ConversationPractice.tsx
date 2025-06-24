@@ -53,6 +53,31 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
   const [selectedLanguage, setSelectedLanguage] = useState<'tamil' | 'sinhala' | null>(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const [isGettingCorrection, setIsGettingCorrection] = useState(false);
+  
+  // Function to highlight errors in original text
+  const renderHighlightedText = (originalText: string, corrections: any[]) => {
+    if (!corrections || corrections.length === 0) {
+      return <span>{originalText}</span>;
+    }
+    
+    let highlightedText = originalText;
+    
+    // Sort corrections by position to avoid conflicts
+    const sortedCorrections = [...corrections].sort((a, b) => {
+      const aIndex = originalText.toLowerCase().indexOf(a.original.toLowerCase());
+      const bIndex = originalText.toLowerCase().indexOf(b.original.toLowerCase());
+      return bIndex - aIndex; // Reverse order to replace from end to start
+    });
+    
+    sortedCorrections.forEach((correction) => {
+      const regex = new RegExp(`\\b${correction.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+      highlightedText = highlightedText.replace(regex, 
+        `<mark style="background-color: #fee2e2; color: #dc2626; font-weight: bold; padding: 2px 4px; border-radius: 3px; border: 1px solid #fca5a5;">$&</mark>`
+      );
+    });
+    
+    return <span dangerouslySetInnerHTML={{ __html: highlightedText }} />;
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const conversationTopics = [
@@ -665,34 +690,46 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
                     
                     {message.autoCorrection.hasErrors ? (
                       <div className="space-y-2">
-                        {/* Original vs Corrected */}
-                        <div className="bg-white rounded p-2 border">
-                          <div className="text-xs text-gray-500 mb-1">Original:</div>
-                          <div className="text-red-600 text-sm">{message.autoCorrection.originalText}</div>
+                        {/* Original vs Corrected with highlighting */}
+                        <div className="bg-white rounded p-3 border-2 border-red-200">
+                          <div className="text-xs font-medium text-red-700 mb-2">❌ Original (with errors):</div>
+                          <div className="text-red-600 text-sm font-medium bg-red-50 p-2 rounded border-l-4 border-red-400">
+                            {renderHighlightedText(message.autoCorrection.originalText, message.autoCorrection.corrections || [])}
+                          </div>
                         </div>
-                        <div className="bg-white rounded p-2 border">
-                          <div className="text-xs text-gray-500 mb-1">Corrected:</div>
-                          <div className="text-green-600 text-sm font-medium">{message.autoCorrection.correctedText}</div>
+                        <div className="bg-white rounded p-3 border-2 border-green-200 mt-2">
+                          <div className="text-xs font-medium text-green-700 mb-2">✅ Corrected:</div>
+                          <div className="text-green-600 text-sm font-medium bg-green-50 p-2 rounded border-l-4 border-green-400">
+                            {message.autoCorrection.correctedText}
+                          </div>
                         </div>
                         
-                        {/* Individual corrections */}
+                        {/* Individual corrections with enhanced highlighting */}
                         {message.autoCorrection.corrections?.map((correction, index) => (
-                          <div key={index} className="bg-white rounded p-2 border-l-4 border-orange-400">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-red-500 line-through text-sm">{correction.original}</span>
-                              <ArrowRight className="w-3 h-3 text-orange-500" />
-                              <span className="text-green-600 font-medium text-sm">{correction.corrected}</span>
-                              <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded text-xs ml-auto">
-                                {correction.type}
+                          <div key={index} className="bg-white rounded p-3 border-l-4 border-orange-400 shadow-sm">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="bg-red-100 text-red-700 px-2 py-1 rounded font-bold text-sm border border-red-300">
+                                  ❌ {correction.original}
+                                </span>
+                                <ArrowRight className="w-4 h-4 text-orange-500 font-bold" />
+                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded font-bold text-sm border border-green-300">
+                                  ✅ {correction.corrected}
+                                </span>
+                              </div>
+                              <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium ml-auto">
+                                {correction.type.toUpperCase()}
                               </span>
                             </div>
-                            <p className="text-gray-600 text-xs">{correction.explanation}</p>
+                            <div className="bg-gray-50 p-2 rounded border">
+                              <p className="text-gray-700 text-sm font-medium">💡 {correction.explanation}</p>
+                            </div>
                             {selectedLanguage && showTranslation && (
-                              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-                                <div className="text-blue-700 font-medium">
-                                  {selectedLanguage === 'tamil' ? 'தமிழில் விளக்கம்' : 'සිංහල පැහැදිලි කිරීම'}:
+                              <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                                <div className="text-blue-700 font-medium text-sm">
+                                  {selectedLanguage === 'tamil' ? '🇮🇳 தமிழில் விளக்கம்' : '🇱🇰 සිංහල පැහැදිලි කිරීම'}:
                                 </div>
-                                <div className="text-blue-600 mt-1">
+                                <div className="text-blue-600 mt-1 text-sm">
                                   {correction.explanation.includes('\n\n') 
                                     ? correction.explanation.split('\n\n')[1] 
                                     : translationService.getFallbackPhrase("Grammar error", selectedLanguage)}

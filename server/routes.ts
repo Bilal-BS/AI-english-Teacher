@@ -78,6 +78,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'spelling'
         },
         {
+          pattern: /\byasterday\b/gi,
+          replacement: 'yesterday',
+          explanation: 'Corrected spelling: "yasterday" → "yesterday"',
+          type: 'spelling'
+        },
+        {
+          pattern: /\btommorow\b/gi,
+          replacement: 'tomorrow',
+          explanation: 'Corrected spelling: "tommorow" → "tomorrow"',
+          type: 'spelling'
+        },
+        {
+          pattern: /\brecieve\b/gi,
+          replacement: 'receive',
+          explanation: 'Corrected spelling: "recieve" → "receive"',
+          type: 'spelling'
+        },
+        {
+          pattern: /\bseperate\b/gi,
+          replacement: 'separate',
+          explanation: 'Corrected spelling: "seperate" → "separate"',
+          type: 'spelling'
+        },
+        {
+          pattern: /\bteacher\b/gi,
+          replacement: 'teacher',
+          explanation: 'Spelling is correct',
+          type: 'spelling'
+        },
+        {
           pattern: /\bi not go\b/gi,
           replacement: "I didn't go",
           explanation: 'Corrected negative past tense: "not go" → "didn\'t go"',
@@ -155,12 +185,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'buy': 'bought',
               'make': 'made',
               'take': 'took',
-              'give': 'gave'
+              'give': 'gave',
+              'want': 'wanted',
+              'be': 'was'
             };
             const pastVerb = pastTense[verb.toLowerCase()] || verb + 'ed';
             return `${subject} ${pastVerb} ${object} yesterday`;
           },
           explanation: 'Corrected word order and past tense form',
+          type: 'grammar'
+        },
+        {
+          pattern: /\bwant to be yesterday\b/gi,
+          replacement: 'wanted to be',
+          explanation: 'Corrected past tense: "want to be yesterday" → "wanted to be"',
           type: 'grammar'
         }
       ];
