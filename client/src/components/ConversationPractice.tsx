@@ -205,41 +205,116 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
   };
 
   const generateFallbackResponse = (userInput: string, topic: string): string => {
-    const responses = {
-      'daily-routine': [
-        "That sounds like an interesting routine! What's your favorite part of the day?",
-        "I see! How long have you been following this routine?",
-        "That's great! Do you ever change your routine on weekends?"
-      ],
-      'hobbies': [
-        "That hobby sounds really fun! How did you get started with it?",
-        "Interesting! How often do you get to practice that?",
-        "That's a great hobby! Have you met other people who share this interest?"
-      ],
-      'travel': [
-        "That sounds like an amazing place! What was your favorite part about visiting there?",
-        "Wow! How was the food there? Did you try anything new?",
-        "That must have been exciting! Would you like to go back there someday?"
-      ],
-      'food': [
-        "That sounds delicious! Do you know how to cook it yourself?",
-        "Interesting choice! What makes that your favorite?",
-        "That's great! Do you have a favorite restaurant for that type of food?"
-      ],
-      'work-study': [
-        "That sounds like interesting work! What do you enjoy most about it?",
-        "I see! How long have you been doing that?",
-        "That's great! What are your goals for the future?"
-      ],
-      'technology': [
-        "That's interesting! How has that technology helped you?",
-        "I see! Do you think technology has made life easier or more complicated?",
-        "That's a good point! What do you think will be the next big technological change?"
-      ]
+    const lowerInput = userInput.toLowerCase();
+    
+    // More dynamic responses based on user input and conversation length
+    const responseStrategies = {
+      'daily-routine': {
+        questions: [
+          "What time do you usually wake up?",
+          "Do you have a morning routine?",
+          "What's the best part of your day?",
+          "How do you relax in the evening?",
+          "Do weekends look different for you?"
+        ],
+        reactions: [
+          "That sounds well organized!",
+          "I can see you have a good routine.",
+          "That's a healthy approach to your day.",
+          "It sounds like you manage your time well."
+        ]
+      },
+      'hobbies': {
+        questions: [
+          "How did you first get interested in that?",
+          "Do you practice that hobby regularly?",
+          "Have you learned any new skills recently?",
+          "What draws you to that activity?",
+          "Do you have a favorite place to do that?"
+        ],
+        reactions: [
+          "That hobby sounds really engaging!",
+          "I can tell you're passionate about that.",
+          "That's a creative way to spend time.",
+          "It sounds like you really enjoy that."
+        ]
+      },
+      'travel': {
+        questions: [
+          "Where would you love to visit next?",
+          "What was the most memorable part of your trip?",
+          "Do you prefer planning trips or being spontaneous?",
+          "What kind of places do you enjoy most?",
+          "Have you tried the local food there?"
+        ],
+        reactions: [
+          "That destination sounds amazing!",
+          "I can imagine that was quite an experience.",
+          "Travel can be so enriching.",
+          "That sounds like a wonderful adventure."
+        ]
+      },
+      'food': {
+        questions: [
+          "Do you enjoy cooking at home?",
+          "What's your favorite cuisine?",
+          "Have you tried making that dish yourself?",
+          "Do you like trying new restaurants?",
+          "What's your go-to comfort food?"
+        ],
+        reactions: [
+          "That sounds absolutely delicious!",
+          "I can tell you appreciate good food.",
+          "Food brings people together, doesn't it?",
+          "That's an interesting choice of flavors."
+        ]
+      },
+      'work-study': {
+        questions: [
+          "What do you find most rewarding about your work?",
+          "Are you learning anything new lately?",
+          "What are your goals for the future?",
+          "Do you enjoy working with others?",
+          "What skills would you like to develop?"
+        ],
+        reactions: [
+          "That sounds like meaningful work.",
+          "It's great that you're focused on learning.",
+          "That shows real dedication.",
+          "You seem very motivated."
+        ]
+      },
+      'technology': {
+        questions: [
+          "How has technology changed your daily life?",
+          "What's your favorite app or website?",
+          "Do you think AI will change things more?",
+          "Are you interested in learning new tech skills?",
+          "What technology do you find most useful?"
+        ],
+        reactions: [
+          "Technology certainly changes quickly!",
+          "That's an interesting perspective on tech.",
+          "Digital tools can be so helpful.",
+          "You seem tech-savvy."
+        ]
+      }
     };
 
-    const topicResponses = responses[topic as keyof typeof responses] || responses['daily-routine'];
-    return topicResponses[Math.floor(Math.random() * topicResponses.length)];
+    const currentTopic = responseStrategies[topic as keyof typeof responseStrategies] || responseStrategies['daily-routine'];
+    
+    // Use conversation turn count to vary response types
+    const isQuestion = turnCount % 3 === 0; // Ask questions every 3rd turn
+    const useReaction = lowerInput.includes('yes') || lowerInput.includes('no') || lowerInput.includes('like') || lowerInput.includes('love');
+    
+    if (isQuestion && !useReaction) {
+      const randomQuestion = currentTopic.questions[Math.floor(Math.random() * currentTopic.questions.length)];
+      return randomQuestion;
+    } else {
+      const randomReaction = currentTopic.reactions[Math.floor(Math.random() * currentTopic.reactions.length)];
+      const followUpQuestion = currentTopic.questions[Math.floor(Math.random() * currentTopic.questions.length)];
+      return `${randomReaction} ${followUpQuestion}`;
+    }
   };
 
   const resetConversation = () => {

@@ -172,7 +172,8 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
       const timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            handleComplete();
+            // Use setTimeout to avoid state update conflicts
+            setTimeout(() => handleComplete(), 0);
             return 0;
           }
           return prev - 1;
@@ -200,11 +201,12 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
       return false;
     }
     if (trimmed.length > 50) {
-      setFillBlankError('Answer is too long');
+      setFillBlankError('Answer is too long (max 50 characters)');
       return false;
     }
-    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) {
-      setFillBlankError('Please use only letters, spaces, hyphens, and apostrophes');
+    // Allow letters, spaces, hyphens, apostrophes, and basic punctuation
+    if (!/^[a-zA-Z\s'\-.,!?]+$/.test(trimmed)) {
+      setFillBlankError('Please use only letters, spaces, and basic punctuation');
       return false;
     }
     setFillBlankError('');
@@ -216,11 +218,11 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
     newAnswers[currentQuestion] = answer;
     setAnswers(newAnswers);
     
-    // For fill-blank questions, also update the input state
+    // For fill-blank questions, sync with input state
     if (placementQuestions[currentQuestion].type === 'fill-blank') {
-      setFillBlankAnswer(answer as string);
-      if (answer && (answer as string).trim()) {
-        validateFillBlank(answer as string);
+      const answerStr = answer as string;
+      if (fillBlankAnswer !== answerStr) {
+        setFillBlankAnswer(answerStr);
       }
     }
   };
@@ -237,15 +239,20 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
     }
 
     if (currentQuestion < placementQuestions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-      const nextQuestion = placementQuestions[currentQuestion + 1];
-      if (nextQuestion.type === 'fill-blank') {
-        const nextAnswer = answers[currentQuestion + 1] as string || '';
-        setFillBlankAnswer(nextAnswer);
-      } else {
-        setFillBlankAnswer('');
-      }
-      setFillBlankError('');
+      const nextIndex = currentQuestion + 1;
+      setCurrentQuestion(nextIndex);
+      
+      // Reset fill-blank state for next question
+      setTimeout(() => {
+        const nextQuestion = placementQuestions[nextIndex];
+        if (nextQuestion.type === 'fill-blank') {
+          const existingAnswer = answers[nextIndex] as string || '';
+          setFillBlankAnswer(existingAnswer);
+        } else {
+          setFillBlankAnswer('');
+        }
+        setFillBlankError('');
+      }, 0);
     } else {
       handleComplete();
     }
@@ -278,11 +285,15 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
         // For fill-blank questions, check if the answer matches the correct answer
         const correctAnswer = question.correctAnswer as string;
         const userAnswerStr = (userAnswer as string || '').toLowerCase().trim();
+        const correctLower = correctAnswer.toLowerCase().trim();
         
-        // Check for exact match or partial match (for cases like "will have" where "will" might be acceptable)
-        isCorrect = userAnswerStr === correctAnswer.toLowerCase() || 
-                   correctAnswer.toLowerCase().includes(userAnswerStr) ||
-                   userAnswerStr.includes(correctAnswer.toLowerCase());
+        // Check for exact match or key word match
+        isCorrect = userAnswerStr === correctLower || 
+                   userAnswerStr.includes(correctLower) ||
+                   correctLower.includes(userAnswerStr) ||
+                   // Handle multi-word answers by checking if user got the key part
+                   (correctLower.includes(' ') && correctLower.split(' ').some(word => 
+                     word.length > 2 && userAnswerStr.includes(word)));
       } else {
         // For multiple choice questions
         isCorrect = userAnswer === question.correctAnswer;
@@ -544,7 +555,7 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
   const progress = ((currentQuestion + 1) / placementQuestions.length) * 100;
   const hasAnswer = answers[currentQuestion] !== undefined;
   const isValidAnswer = question.type === 'fill-blank' ? 
-    hasAnswer && !fillBlankError && answers[currentQuestion] && (answers[currentQuestion] as string).trim().length > 0 : 
+    hasAnswer && !fillBlankError && fillBlankAnswer.trim().length > 0 : 
     hasAnswer;
 
   return (
@@ -637,10 +648,15 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
                     const value = e.target.value;
                     setFillBlankAnswer(value);
                     handleAnswer(value);
+                    
+                    // Clear error when user starts typing
+                    if (fillBlankError && value.trim()) {
+                      setFillBlankError('');
+                    }
+                    
+                    // Validate on the fly
                     if (value.trim()) {
                       validateFillBlank(value);
-                    } else {
-                      setFillBlankError('Please enter an answer');
                     }
                   }}
                   onBlur={() => {
