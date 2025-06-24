@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Volume2, Send, RotateCcw, CheckCircle, X, MessageCircle, Bot, User } from 'lucide-react';
+import { Mic, MicOff, Volume2, Send, RotateCcw, CheckCircle, X, MessageCircle, Bot, User, BookOpen, Settings } from 'lucide-react';
 import { speechRecognition, SpeechRecognitionResult } from '../utils/speechRecognition';
 import { openaiService, ChatMessage } from '../utils/openaiService';
 
@@ -15,6 +15,13 @@ interface ConversationMessage {
   timestamp: Date;
   isSpoken?: boolean;
   confidence?: number;
+  corrections?: Array<{
+    original: string;
+    corrected: string;
+    explanation: string;
+    type: 'grammar' | 'vocabulary' | 'pronunciation' | 'fluency';
+  }>;
+  encouragement?: string;
 }
 
 const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, onComplete }) => {
@@ -27,6 +34,8 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
   const [error, setError] = useState<string>('');
   const [conversationScore, setConversationScore] = useState(0);
   const [turnCount, setTurnCount] = useState(0);
+  const [showCorrections, setShowCorrections] = useState(true);
+  const [isGettingCorrection, setIsGettingCorrection] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const conversationTopics = [
@@ -154,6 +163,34 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
     setTurnCount(newTurnCount);
 
     try {
+      let correctionFeedback = null;
+      
+      // Get correction feedback if enabled and OpenAI is configured
+      if (showCorrections && openaiService.isConfigured() && content.trim().length > 3) {
+        setIsGettingCorrection(true);
+        try {
+          const topicTitle = conversationTopics.find(t => t.id === conversationTopic)?.title || 'general conversation';
+          correctionFeedback = await openaiService.getCorrectionFeedback(content, `Conversation about ${topicTitle}`);
+        } catch (error) {
+          console.error('Error getting corrections:', error);
+        }
+        setIsGettingCorrection(false);
+      }
+
+      // Update user message with corrections if available
+      if (correctionFeedback?.hasErrors) {
+        const updatedUserMessage: ConversationMessage = {
+          ...userMessage,
+          corrections: correctionFeedback.corrections,
+          encouragement: correctionFeedback.encouragement
+        };
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = updatedUserMessage;
+          return newMessages;
+        });
+      }
+
       // Prepare conversation context for AI (include the new user message)
       const updatedMessages = [...messages, userMessage];
       const chatMessages: ChatMessage[] = updatedMessages.map(msg => ({
@@ -161,12 +198,22 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
         content: msg.content
       }));
 
+      const topicTitle = conversationTopics.find(t => t.id === conversationTopic)?.title || 'general topics';
       const context = `You are a friendly English conversation partner helping someone practice English. 
-      Topic: ${conversationTopic}. 
-      Keep responses conversational, encouraging, and at an appropriate level. 
-      Ask follow-up questions to keep the conversation flowing. 
-      Gently correct major errors if needed, but focus on communication over perfection.
-      Keep responses to 1-2 sentences to maintain natural conversation flow.`;
+
+Topic: ${topicTitle}
+Current conversation turn: ${newTurnCount}
+
+Guidelines:
+- Keep responses natural and conversational (1-2 sentences)
+- Ask engaging follow-up questions to continue the conversation
+- Match the user's language level - don't use overly complex vocabulary
+- Be encouraging and supportive
+- Focus on communication over perfect grammar
+- Vary your responses - don't repeat similar phrases
+- Show genuine interest in what the user is saying
+
+Respond naturally as if you're having a real conversation with a friend who is learning English.`;
 
       let aiResponse: string;
       
@@ -186,8 +233,9 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
 
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Update conversation score based on participation
-      const newScore = Math.min(100, Math.round(newTurnCount * 10 + (isSpoken ? 5 : 0)));
+      // Update conversation score based on participation and corrections
+      const correctionBonus = correctionFeedback?.hasErrors ? 2 : 0; // Bonus for getting corrections
+      const newScore = Math.min(100, Math.round(newTurnCount * 10 + (isSpoken ? 5 : 0) + correctionBonus));
       setConversationScore(newScore);
 
     } catch (error) {
@@ -324,6 +372,8 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
     setTurnCount(0);
     setConversationScore(0);
     setError('');
+    setIsGettingCorrection(false);
+    setIsProcessing(false);
   };
 
   const endConversation = () => {
@@ -400,6 +450,17 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
                 <div className="text-lg font-bold">{conversationScore}%</div>
               </div>
               <button
+                onClick={() => setShowCorrections(!showCorrections)}
+                className={`p-2 rounded-lg transition-colors ${
+                  showCorrections 
+                    ? 'bg-white bg-opacity-20 text-white' 
+                    : 'bg-white bg-opacity-10 text-white opacity-60'
+                }`}
+                title={showCorrections ? 'Disable corrections' : 'Enable corrections'}
+              >
+                <BookOpen className="w-5 h-5" />
+              </button>
+              <button
                 onClick={onClose}
                 className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
               >
@@ -412,34 +473,77 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.map(message => (
-            <div
-              key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                <div className="flex items-start space-x-2">
-                  {message.role === 'assistant' && <Bot className="w-4 h-4 mt-1 flex-shrink-0" />}
-                  {message.role === 'user' && <User className="w-4 h-4 mt-1 flex-shrink-0" />}
-                  <div className="flex-1">
-                    <p className="text-sm">{message.content}</p>
-                    {message.isSpoken && (
-                      <div className="flex items-center space-x-1 mt-1 opacity-75">
-                        <Mic className="w-3 h-3" />
-                        <span className="text-xs">Spoken</span>
-                        {message.confidence && (
-                          <span className="text-xs">({Math.round(message.confidence * 100)}%)</span>
-                        )}
+            <div key={message.id}>
+              <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
+                  message.role === 'user'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  <div className="flex items-start space-x-2">
+                    {message.role === 'assistant' && <Bot className="w-4 h-4 mt-1 flex-shrink-0" />}
+                    {message.role === 'user' && <User className="w-4 h-4 mt-1 flex-shrink-0" />}
+                    <div className="flex-1">
+                      <p className="text-sm">{message.content}</p>
+                      {message.isSpoken && (
+                        <div className="flex items-center space-x-1 mt-1 opacity-75">
+                          <Mic className="w-3 h-3" />
+                          <span className="text-xs">Spoken</span>
+                          {message.confidence && (
+                            <span className="text-xs">({Math.round(message.confidence * 100)}%)</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Corrections Display */}
+              {message.corrections && message.corrections.length > 0 && (
+                <div className="mt-2 mr-0 ml-auto max-w-xs lg:max-w-md">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <BookOpen className="w-4 h-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800">Helpful Suggestions</span>
+                    </div>
+                    
+                    {message.corrections.map((correction, index) => (
+                      <div key={index} className="mb-2 last:mb-0">
+                        <div className="text-sm">
+                          <span className="line-through text-red-600 bg-red-100 px-1 rounded">
+                            {correction.original}
+                          </span>
+                          <span className="mx-2">→</span>
+                          <span className="text-green-600 bg-green-100 px-1 rounded font-medium">
+                            {correction.corrected}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">{correction.explanation}</p>
+                      </div>
+                    ))}
+                    
+                    {message.encouragement && (
+                      <div className="mt-2 pt-2 border-t border-yellow-200">
+                        <p className="text-xs text-green-700 font-medium">{message.encouragement}</p>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           ))}
+          
+          {isGettingCorrection && (
+            <div className="flex justify-end">
+              <div className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-2xl">
+                <div className="flex items-center space-x-2">
+                  <BookOpen className="w-4 h-4" />
+                  <span className="text-sm">Analyzing for suggestions...</span>
+                </div>
+              </div>
+            </div>
+          )}
           
           {isProcessing && (
             <div className="flex justify-start">
@@ -527,6 +631,12 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
           <div className="mt-3 text-xs text-gray-500 text-center">
             {isRecording ? 'Listening... Speak now!' : 'Click the microphone to speak or type your message'}
             {turnCount < 5 && ` • ${5 - turnCount} more exchanges to complete session`}
+            {showCorrections && openaiService.isConfigured() && (
+              <div className="mt-1 flex items-center justify-center space-x-1">
+                <BookOpen className="w-3 h-3" />
+                <span>AI corrections enabled</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

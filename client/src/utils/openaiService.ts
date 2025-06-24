@@ -2,7 +2,9 @@ import OpenAI from 'openai';
 
 // Initialize OpenAI client
 const getApiKey = () => {
-  return import.meta.env.VITE_OPENAI_API_KEY || '';
+  // In a browser environment, the API key should come from environment variables
+  // For security, this should ideally be handled by a backend proxy in production
+  return import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '';
 };
 
 let openai: OpenAI | null = null;
@@ -53,7 +55,7 @@ export class OpenAIService {
       };
 
       const response = await client.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [systemMessage, ...messages],
         max_tokens: 200,
         temperature: 0.7,
@@ -63,6 +65,77 @@ export class OpenAIService {
     } catch (error) {
       console.error('OpenAI Chat Error:', error);
       return 'I\'m having trouble connecting right now. Please try again later.';
+    }
+  }
+
+  // Get correction feedback for user messages
+  async getCorrectionFeedback(userText: string, context: string = ''): Promise<{
+    hasErrors: boolean;
+    corrections: Array<{
+      original: string;
+      corrected: string;
+      explanation: string;
+      type: 'grammar' | 'vocabulary' | 'pronunciation' | 'fluency';
+    }>;
+    encouragement: string;
+  }> {
+    try {
+      const client = initializeOpenAI();
+      if (!client) {
+        return {
+          hasErrors: false,
+          corrections: [],
+          encouragement: "Keep practicing! You're doing great!"
+        };
+      }
+
+      const prompt = `Analyze this English text for errors and provide corrections. Be encouraging and focus on major issues that help learning.
+
+Text to analyze: "${userText}"
+Context: ${context}
+
+Provide response in JSON format:
+{
+  "hasErrors": boolean,
+  "corrections": [
+    {
+      "original": "incorrect phrase",
+      "corrected": "correct phrase", 
+      "explanation": "brief explanation",
+      "type": "grammar|vocabulary|pronunciation|fluency"
+    }
+  ],
+  "encouragement": "positive feedback message"
+}
+
+Focus on:
+- Major grammar errors that affect understanding
+- Word choice improvements for natural expression
+- Natural expression suggestions
+- Keep corrections helpful, not overwhelming (max 3 corrections)
+- Always provide encouragement
+- If the text is mostly correct, still provide encouragement but set hasErrors to false`;
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      return {
+        hasErrors: result.hasErrors || false,
+        corrections: result.corrections || [],
+        encouragement: result.encouragement || "Great job practicing English!"
+      };
+    } catch (error) {
+      console.error('Error getting correction feedback:', error);
+      return {
+        hasErrors: false,
+        corrections: [],
+        encouragement: "Keep practicing! You're doing great!"
+      };
     }
   }
 
@@ -90,7 +163,7 @@ export class OpenAIService {
       }`;
 
       const response = await client.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
           {
             role: 'system',
@@ -151,7 +224,7 @@ export class OpenAIService {
       Respond as a JSON array of strings: ["feedback1", "feedback2", "feedback3"]`;
 
       const response = await client.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
           {
             role: 'system',
