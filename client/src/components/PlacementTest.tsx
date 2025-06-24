@@ -170,13 +170,17 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
   useEffect(() => {
     if (isStarted && timeLeft > 0 && !showResults) {
       const timer = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            handleComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
       return () => clearInterval(timer);
-    } else if (timeLeft === 0 && !showResults) {
-      handleComplete();
     }
-  }, [isStarted, timeLeft, showResults]);
+  }, [isStarted, showResults]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -185,6 +189,11 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
   };
 
   const validateFillBlank = (answer: string): boolean => {
+    if (!answer) {
+      setFillBlankError('Please enter an answer');
+      return false;
+    }
+    
     const trimmed = answer.trim();
     if (trimmed.length === 0) {
       setFillBlankError('Please enter an answer');
@@ -207,10 +216,12 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
     newAnswers[currentQuestion] = answer;
     setAnswers(newAnswers);
     
-    // For fill-blank questions, also update the input state and validate
+    // For fill-blank questions, also update the input state
     if (placementQuestions[currentQuestion].type === 'fill-blank') {
       setFillBlankAnswer(answer as string);
-      validateFillBlank(answer as string);
+      if (answer && (answer as string).trim()) {
+        validateFillBlank(answer as string);
+      }
     }
   };
 
@@ -220,14 +231,20 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
     // Validate fill-blank answers before proceeding
     if (question.type === 'fill-blank') {
       const answer = answers[currentQuestion] as string || '';
-      if (!validateFillBlank(answer)) {
+      if (!answer.trim() || !validateFillBlank(answer)) {
         return;
       }
     }
 
     if (currentQuestion < placementQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setFillBlankAnswer('');
+      setCurrentQuestion(prev => prev + 1);
+      const nextQuestion = placementQuestions[currentQuestion + 1];
+      if (nextQuestion.type === 'fill-blank') {
+        const nextAnswer = answers[currentQuestion + 1] as string || '';
+        setFillBlankAnswer(nextAnswer);
+      } else {
+        setFillBlankAnswer('');
+      }
       setFillBlankError('');
     } else {
       handleComplete();
@@ -258,10 +275,13 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
       let isCorrect = false;
 
       if (question.type === 'fill-blank') {
-        // For fill-blank questions, check if the answer contains the correct answer
+        // For fill-blank questions, check if the answer matches the correct answer
         const correctAnswer = question.correctAnswer as string;
         const userAnswerStr = (userAnswer as string || '').toLowerCase().trim();
+        
+        // Check for exact match or partial match (for cases like "will have" where "will" might be acceptable)
         isCorrect = userAnswerStr === correctAnswer.toLowerCase() || 
+                   correctAnswer.toLowerCase().includes(userAnswerStr) ||
                    userAnswerStr.includes(correctAnswer.toLowerCase());
       } else {
         // For multiple choice questions
@@ -524,7 +544,7 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
   const progress = ((currentQuestion + 1) / placementQuestions.length) * 100;
   const hasAnswer = answers[currentQuestion] !== undefined;
   const isValidAnswer = question.type === 'fill-blank' ? 
-    hasAnswer && !fillBlankError && validateFillBlank(answers[currentQuestion] as string || '') : 
+    hasAnswer && !fillBlankError && answers[currentQuestion] && (answers[currentQuestion] as string).trim().length > 0 : 
     hasAnswer;
 
   return (
@@ -620,7 +640,7 @@ const PlacementTest: React.FC<PlacementTestProps> = ({ onComplete, onSkip }) => 
                     if (value.trim()) {
                       validateFillBlank(value);
                     } else {
-                      setFillBlankError('');
+                      setFillBlankError('Please enter an answer');
                     }
                   }}
                   onBlur={() => {

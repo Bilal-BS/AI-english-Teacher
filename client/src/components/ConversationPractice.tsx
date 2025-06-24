@@ -148,16 +148,18 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
 
     setMessages(prev => [...prev, userMessage]);
     setIsProcessing(true);
-    setTurnCount(prev => prev + 1);
+    
+    // Update turn count for scoring
+    const newTurnCount = turnCount + 1;
+    setTurnCount(newTurnCount);
 
     try {
-      // Prepare conversation context for AI
-      const chatMessages: ChatMessage[] = messages.map(msg => ({
+      // Prepare conversation context for AI (include the new user message)
+      const updatedMessages = [...messages, userMessage];
+      const chatMessages: ChatMessage[] = updatedMessages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
-      
-      chatMessages.push({ role: 'user', content });
 
       const context = `You are a friendly English conversation partner helping someone practice English. 
       Topic: ${conversationTopic}. 
@@ -185,7 +187,7 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
       setMessages(prev => [...prev, assistantMessage]);
       
       // Update conversation score based on participation
-      const newScore = Math.min(100, Math.round((turnCount + 1) * 10 + (isSpoken ? 5 : 0)));
+      const newScore = Math.min(100, Math.round(newTurnCount * 10 + (isSpoken ? 5 : 0)));
       setConversationScore(newScore);
 
     } catch (error) {
