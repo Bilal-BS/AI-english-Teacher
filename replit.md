@@ -107,8 +107,13 @@ This is a comprehensive English learning application built with a modern full-st
 
 ## Changelog
 
-Changelog:
-- June 24, 2025. Initial setup
+Recent Updates:
+- December 30, 2024: Successfully migrated from Bolt to Replit environment
+- December 30, 2024: Fixed infinite re-render issues in React components  
+- December 30, 2024: Added 20 comprehensive English lessons (beginner to intermediate)
+- December 30, 2024: Enhanced achievement system with 15 different badges
+- December 30, 2024: Configured OpenAI API integration with proper error handling
+- December 30, 2024: Implemented pronunciation analyzer and vocabulary trainer
 
 ## User Preferences
 
