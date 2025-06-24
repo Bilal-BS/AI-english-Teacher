@@ -1,0 +1,122 @@
+[LaunchDarkly] LaunchDarkly client initialized
+/__/auth/iframe?apiKey=AIzaSyARAzVTWc_KOBojIholLo2wzwNOQ6VKcB8&appName=%5BDEFAULT%5D&v=10.8.0&eid=p&usegapi=1&jsh=m%3B%2F_%2Fscs%2Fabc-static%2F_%2Fjs%2Fk%3Dgapi.lb.en.nJpyt-fjzo8.O%2Fd%3D1%2Frs%3DAHpOoo9fTqXSCmwMDsu9FH68l5KSqr6MBg%2Fm%3D__features__#id=I0_1750759173923&_gfid=I0_1750759173923&parent=https%3A%2F%2Freplit.com&pfname=&rpctoken=20665166:1 [Report Only] Refused to load the script 'https://replit.com/__/auth/iframe.js' because it violates the following Content Security Policy directive: "script-src 'none'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+/__/auth/iframe?apiKey=AIzaSyARAzVTWc_KOBojIholLo2wzwNOQ6VKcB8&appName=%5BDEFAULT%5D&v=10.8.0&eid=p&usegapi=1&jsh=m%3B%2F_%2Fscs%2Fabc-static%2F_%2Fjs%2Fk%3Dgapi.lb.en.nJpyt-fjzo8.O%2Fd%3D1%2Frs%3DAHpOoo9fTqXSCmwMDsu9FH68l5KSqr6MBg%2Fm%3D__features__#id=I0_1750759173923&_gfid=I0_1750759173923&parent=https%3A%2F%2Freplit.com&pfname=&rpctoken=20665166:7 [Report Only] Refused to execute inline script because it violates the following Content Security Policy directive: "script-src 'none'". Either the 'unsafe-inline' keyword, a hash ('sha256-LhIWOhjLqan1vNuJevmXgr6L87Nor5PqfWzSqz9q74w='), or a nonce ('nonce-...') is required to enable inline execution.
+
+iframe.js:271 [Report Only] Refused to connect to 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=AIzaSyARAzVTWc_KOBojIholLo2wzwNOQ6VKcB8&cb=1750759173993' because it violates the following Content Security Policy directive: "connect-src 'none'".
+
+/@faumyzaid/ai?forkRepl=eda03255-38ed-4b7f-9cbc-4391dd91c0ab&forkContext=coverPage&redirecting=1#replit.md:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+/@faumyzaid/ai?forkRepl=eda03255-38ed-4b7f-9cbc-4391dd91c0ab&forkContext=coverPage&redirecting=1#replit.md:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+3_app-e7a35d7b9ef70695.js:38 [LaunchDarkly] Exceeded event queue capacity. Increase capacity to avoid dropping events.
+(anonymous) @ _app-e7a35d7b9ef70695.js:38Understand this warning
+_app-e7a35d7b9ef70695.js:38 onClick is deprecated, please use onPress
+(anonymous) @ _app-e7a35d7b9ef70695.js:38Understand this warning
+4_app-e7a35d7b9ef70695.js:38 [LaunchDarkly] Exceeded event queue capacity. Increase capacity to avoid dropping events.
+(anonymous) @ _app-e7a35d7b9ef70695.js:38Understand this warning
+8Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this error
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'battery'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+framework-15fff63a2e3741b7.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-15fff63a2e3741b7.js:1Understand this warning
+13_app-e7a35d7b9ef70695.js:38 [LaunchDarkly] Exceeded event queue capacity. Increase capacity to avoid dropping events.
+(anonymous) @ _app-e7a35d7b9ef70695.js:38Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+2_app-e7a35d7b9ef70695.js:38 [LaunchDarkly] Exceeded event queue capacity. Increase capacity to avoid dropping events.
+(anonymous) @ _app-e7a35d7b9ef70695.js:38Understand this warning
+ Skip test clicked
+ Placement test skip handler called
+ Updated user preferences to beginner level
+ Switching to dashboard view
+ Skip test clicked
+ Placement test skip handler called
+ Updated user preferences to beginner level
+ Switching to dashboard view
+ Skip test clicked
+ Placement test skip handler called
+ Updated user preferences to beginner level
+ Switching to dashboard view
+2chunk-PJEEZAML.js:11555 Uncaught Error: Too many re-renders. React limits the number of renders to prevent an infinite loop.
+    at renderWithHooks (chunk-PJEEZAML.js?v=b8376c83:11555:23)
+    at updateFunctionComponent (chunk-PJEEZAML.js?v=b8376c83:14582:28)
+    at beginWork (chunk-PJEEZAML.js?v=b8376c83:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-PJEEZAML.js?v=b8376c83:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-PJEEZAML.js?v=b8376c83:3699:24)
+    at invokeGuardedCallback (chunk-PJEEZAML.js?v=b8376c83:3733:39)
+    at beginWork$1 (chunk-PJEEZAML.js?v=b8376c83:19765:15)
+    at performUnitOfWork (chunk-PJEEZAML.js?v=b8376c83:19198:20)
+    at workLoopSync (chunk-PJEEZAML.js?v=b8376c83:19137:13)
+    at renderRootSync (chunk-PJEEZAML.js?v=b8376c83:19116:15)Understand this error
+ The above error occurred in the <PlacementTest> component:
+
+    at PlacementTest (https://d5a04a9b-2bee-40cf-9359-de0b033fa835-00-1qw7sxhu5sb3p.sisko.replit.dev/src/components/PlacementTest.tsx:157:26)
+    at App (https://d5a04a9b-2bee-40cf-9359-de0b033fa835-00-1qw7sxhu5sb3p.sisko.replit.dev/src/App.tsx?v=t5SiEuFfjak9YBMJjGYrN:262:41)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Mt.forEach.n.<computed> @ eruda.js:2Understand this error
+chunk-PJEEZAML.js:9129 Uncaught Error: Too many re-renders. React limits the number of renders to prevent an infinite loop.
+    at renderWithHooks (chunk-PJEEZAML.js?v=b8376c83:11555:23)
+    at updateFunctionComponent (chunk-PJEEZAML.js?v=b8376c83:14582:28)
+    at beginWork (chunk-PJEEZAML.js?v=b8376c83:15924:22)
+    at beginWork$1 (chunk-PJEEZAML.js?v=b8376c83:19753:22)
+    at performUnitOfWork (chunk-PJEEZAML.js?v=b8376c83:19198:20)
+    at workLoopSync (chunk-PJEEZAML.js?v=b8376c83:19137:13)
+    at renderRootSync (chunk-PJEEZAML.js?v=b8376c83:19116:15)
+    at recoverFromConcurrentError (chunk-PJEEZAML.js?v=b8376c83:18736:28)
+    at performSyncWorkOnRoot (chunk-PJEEZAML.js?v=b8376c83:18879:28)
+    at flushSyncCallbacks (chunk-PJEEZAML.js?v=b8376c83:9119:30)Understand this error
+_app-e7a35d7b9ef70695.js:38 [LaunchDarkly] Exceeded event queue capacity. Increase capacity to avoid dropping events.
+(anonymous) @ _app-e7a35d7b9ef70695.js:38Understand this warning

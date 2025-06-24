@@ -293,8 +293,8 @@ function App() {
 
     setUser(userObj);
 
-    // Check if placement test is needed
-    if (!userObj.hasCompletedPlacementTest && userObj.englishLevel === 'beginner') {
+    // Check if placement test is needed - only if current view is not already dashboard
+    if (!userObj.hasCompletedPlacementTest && userObj.englishLevel === 'beginner' && currentView !== 'dashboard') {
       setCurrentView('placement');
       return;
     }
@@ -348,7 +348,10 @@ function App() {
     setCompletedDays([...new Set(completedLessonDays)]);
     setCurrentDay(Math.min(30, Math.max(...completedLessonDays, 0) + 1));
 
-    setCurrentView('dashboard');
+    // Only set to dashboard if not already there to prevent infinite loop
+    if (currentView !== 'dashboard') {
+      setCurrentView('dashboard');
+    }
   }, []); // Remove dependencies to prevent infinite re-renders
 
   const updateAchievements = (stats: any, allProgress: any[]): Achievement[] => {
@@ -433,7 +436,8 @@ function App() {
     }
     console.log('Switching to dashboard view');
     setCurrentView('dashboard');
-    loadUserData();
+    // Don't call loadUserData() here to prevent infinite loop
+    // The useEffect will handle the data loading
   };
 
   const handleStartLesson = (lesson: Lesson) => {
