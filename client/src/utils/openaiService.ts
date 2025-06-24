@@ -1,10 +1,24 @@
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true // Note: In production, use a backend proxy
-});
+const getApiKey = () => {
+  return import.meta.env.VITE_OPENAI_API_KEY || '';
+};
+
+let openai: OpenAI | null = null;
+
+const initializeOpenAI = () => {
+  if (!openai) {
+    const apiKey = getApiKey();
+    if (apiKey) {
+      openai = new OpenAI({
+        apiKey,
+        dangerouslyAllowBrowser: true // Note: In production, use a backend proxy
+      });
+    }
+  }
+  return openai;
+};
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -26,6 +40,11 @@ export class OpenAIService {
   // Chat with AI for conversation practice
   async chatWithAI(messages: ChatMessage[], context?: string): Promise<string> {
     try {
+      const client = initializeOpenAI();
+      if (!client) {
+        return 'AI conversation is not available. Please check your configuration.';
+      }
+
       const systemMessage: ChatMessage = {
         role: 'system',
         content: context || `You are an English conversation teacher. Help the student practice English conversation. 
@@ -33,7 +52,7 @@ export class OpenAIService {
         Keep responses conversational and at an appropriate level for the student.`
       };
 
-      const response = await openai.chat.completions.create({
+      const response = await client.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [systemMessage, ...messages],
         max_tokens: 200,
@@ -50,6 +69,10 @@ export class OpenAIService {
   // Get writing feedback using OpenAI
   async getWritingFeedback(text: string, taskType: string = 'general'): Promise<WritingFeedback> {
     try {
+      const client = initializeOpenAI();
+      if (!client) {
+        return this.generateFallbackFeedback(text);
+      }
       const prompt = `Please analyze this ${taskType} writing and provide detailed feedback. 
       Rate each category from 0-100 and provide specific suggestions for improvement.
 
@@ -66,7 +89,7 @@ export class OpenAIService {
         "suggestions": ["suggestion 1", "suggestion 2", ...]
       }`;
 
-      const response = await openai.chat.completions.create({
+      const response = await client.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
@@ -111,6 +134,10 @@ export class OpenAIService {
   // Generate pronunciation feedback
   async getPronunciationFeedback(targetText: string, spokenText: string): Promise<string[]> {
     try {
+      const client = initializeOpenAI();
+      if (!client) {
+        return ['Good effort! Keep practicing your pronunciation.'];
+      }
       const prompt = `Compare the target text with what the student said and provide pronunciation feedback.
 
       Target: "${targetText}"
@@ -123,7 +150,7 @@ export class OpenAIService {
 
       Respond as a JSON array of strings: ["feedback1", "feedback2", "feedback3"]`;
 
-      const response = await openai.chat.completions.create({
+      const response = await client.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
@@ -184,7 +211,7 @@ export class OpenAIService {
 
   // Check if OpenAI is configured
   isConfigured(): boolean {
-    return !!import.meta.env.VITE_OPENAI_API_KEY;
+    return !!getApiKey();
   }
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Dashboard from './components/Dashboard';
 import LessonInterface from './components/LessonInterface';
 import LearningPlan from './components/LearningPlan';
@@ -9,6 +9,8 @@ import VocabularyTrainer from './components/VocabularyTrainer';
 import WritingAssistant from './components/WritingAssistant';
 import { Lesson, UserProgress, Achievement, User, PlacementTestResult } from './types';
 import { userDataManager } from './utils/userDataManager';
+import { enhancedLessons } from './data/enhancedLessons';
+import { enhancedAchievements } from './data/achievementData';
 
 // Enhanced mock data for lessons
 const mockLessons: Lesson[] = [
@@ -249,8 +251,8 @@ function App() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [lessons, setLessons] = useState<Lesson[]>(mockLessons);
-  const [achievements, setAchievements] = useState<Achievement[]>(mockAchievements);
+  const [lessons, setLessons] = useState<Lesson[]>(enhancedLessons);
+  const [achievements, setAchievements] = useState<Achievement[]>(enhancedAchievements);
   
   // Modal states
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
@@ -264,9 +266,9 @@ function App() {
   // Initialize user data and load progress
   useEffect(() => {
     loadUserData();
-  }, []);
+  }, []); // Empty dependency array to prevent infinite re-renders
 
-  const loadUserData = () => {
+  const loadUserData = useCallback(() => {
     // Check if user exists and has completed onboarding
     let userData = userDataManager.getUserData();
     
@@ -302,7 +304,7 @@ function App() {
     
     // Load lesson progress and update lesson completion status
     const allProgress = userDataManager.getAllLessonProgress();
-    const updatedLessons = lessons.map(lesson => {
+    const updatedLessons = enhancedLessons.map(lesson => {
       const progress = allProgress.find(p => p.lessonId === lesson.id);
       return {
         ...lesson,
@@ -320,10 +322,8 @@ function App() {
 
     // Update user progress state
     setUserProgress({
-      totalLessons: mockLessons.length,
-      completedLessons: stats.complete
-
-,
+      totalLessons: enhancedLessons.length,
+      completedLessons: stats.completedLessons,
       currentStreak: stats.currentStreak,
       totalScore: stats.totalScore,
       achievements: updateAchievements(stats, allProgress),
@@ -349,10 +349,10 @@ function App() {
     setCurrentDay(Math.min(30, Math.max(...completedLessonDays, 0) + 1));
 
     setCurrentView('dashboard');
-  };
+  }, []); // Remove dependencies to prevent infinite re-renders
 
   const updateAchievements = (stats: any, allProgress: any[]): Achievement[] => {
-    const updatedAchievements = [...achievements];
+    const updatedAchievements = [...enhancedAchievements];
 
     // First lesson achievement
     if (stats.completedLessons > 0) {
@@ -375,7 +375,7 @@ function App() {
     // Pronunciation master (90%+ on 5 pronunciation lessons)
     const pronunciationLessons = allProgress.filter(p => 
       p.completed && p.score && p.score >= 90 && 
-      lessons.find(l => l.id === p.lessonId)?.category === 'pronunciation'
+      enhancedLessons.find(l => l.id === p.lessonId)?.category === 'pronunciation'
     );
     if (pronunciationLessons.length >= 5) {
       const achievement = updatedAchievements.find(a => a.id === 'pronunciation-master');
@@ -460,7 +460,7 @@ function App() {
     const availableLessons = lessons.filter(l => !l.completed);
     const randomLesson = availableLessons.length > 0 
       ? availableLessons[Math.floor(Math.random() * availableLessons.length)]
-      : lessons[Math.floor(Math.random() * lessons.length)];
+      : enhancedLessons[Math.floor(Math.random() * enhancedLessons.length)];
     
     handleStartLesson(randomLesson);
   };
