@@ -1,8 +1,10 @@
 import OpenAI from 'openai';
 
-// Get API key from environment - Replit secrets are exposed as VITE_ prefixed vars
+// Get API key from environment
 const getApiKey = () => {
-  const envKey = import.meta.env.VITE_OPENAI_API_KEY;
+  // Check multiple possible sources for the API key
+  const envKey = import.meta.env.VITE_OPENAI_API_KEY || 
+                 import.meta.env.OPENAI_API_KEY;
   
   if (envKey && envKey.length > 10 && envKey.startsWith('sk-')) {
     return envKey;
@@ -43,7 +45,7 @@ export interface WritingFeedback {
 
 export class OpenAIService {
   
-  // Combined auto-correction + conversation response
+  // Combined auto-correction + conversation response using backend API
   async chatWithAutoCorrection(userInput: string, context?: string): Promise<{
     corrected: string;
     reply: string;
@@ -56,65 +58,40 @@ export class OpenAIService {
     }>;
   }> {
     try {
-      const client = initializeOpenAI();
-      if (!client) {
-        return {
-          corrected: userInput,
-          reply: "I'm having trouble connecting right now. Please try again later.",
-          hasCorrections: false,
-          corrections: []
-        };
-      }
-
-      const systemPrompt = `You are a friendly English tutor. Always do two things:
-1. Correct grammar/spelling in the user's sentence.
-2. Then give a friendly conversational reply.
-
-Format:
-Corrected: <corrected version>
-Reply: <your response>`;
-
-      const response = await client.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userInput }
-        ],
-        temperature: 0.5,
+      // Use backend API instead of direct OpenAI call
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userInput })
       });
 
-      const aiResponse = response.choices[0]?.message?.content || '';
-      
-      // Parse the AI response to extract corrected text and reply
-      const correctedMatch = aiResponse.match(/Corrected:\s*(.+)/i);
-      const replyMatch = aiResponse.match(/Reply:\s*(.+)/i);
-      
-      const correctedLine = correctedMatch ? correctedMatch[1].trim() : null;
-      const replyLine = replyMatch ? replyMatch[1].trim() : null;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
-      const corrected = correctedLine || userInput;
-      const reply = replyLine || "That's interesting! Tell me more.";
-      const hasCorrections = corrected !== userInput;
-
+      const result = await response.json();
+      
       // Generate corrections array if there were changes
-      const corrections = hasCorrections ? [{
+      const corrections = result.hasCorrections ? [{
         original: userInput,
-        corrected: corrected,
+        corrected: result.corrected,
         explanation: "Grammar and spelling improvements",
         type: 'grammar' as const
       }] : [];
 
       return {
-        corrected,
-        reply,
-        hasCorrections,
+        corrected: result.corrected,
+        reply: result.reply,
+        hasCorrections: result.hasCorrections,
         corrections
       };
     } catch (error) {
-      console.error('OpenAI Auto-correction Error:', error);
+      console.error('Backend API Error:', error);
       return {
         corrected: userInput,
-        reply: "That's interesting! Tell me more about that.",
+        reply: "I'm having trouble right now. Please try again later.",
         hasCorrections: false,
         corrections: []
       };
@@ -460,12 +437,8 @@ Guidelines:
   }
 
   isConfigured(): boolean {
-    const apiKey = getApiKey();
-    const isValid = !!apiKey && apiKey.length > 10 && apiKey.startsWith('sk-');
-    if (!isValid) {
-      console.log('OpenAI API key not found or invalid. Please check your secrets configuration.');
-    }
-    return isValid;
+    // For backend API approach, we assume it's configured if the server is running
+    return true;
   }
 }
 
