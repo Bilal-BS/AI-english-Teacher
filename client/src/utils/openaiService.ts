@@ -115,14 +115,35 @@ Provide response in JSON format:
   "encouragement": "positive feedback message"
 }
 
-Focus on:
-- Major grammar errors that affect understanding
-- Word choice improvements for natural expression
-- Natural expression suggestions  
-- Only provide corrections if there are clear errors (don't nitpick)
-- Keep corrections helpful, not overwhelming (max 2 corrections)
-- Always provide encouragement regardless of errors
-- If the text is mostly correct, set hasErrors to false but still encourage`;
+You are an expert English teacher providing auto-correction feedback. Analyze this text and provide detailed corrections in JSON format:
+
+Text to analyze: "${userText}"
+Context: ${context}
+
+Provide a JSON response with this exact structure:
+{
+  "hasErrors": boolean,
+  "correctedText": "Complete corrected version of the text",
+  "grammarScore": number (70-100, be encouraging),
+  "corrections": [
+    {
+      "original": "incorrect word/phrase from the text",
+      "corrected": "proper correction", 
+      "explanation": "Clear, simple explanation of why this is better",
+      "type": "grammar" | "vocabulary" | "spelling" | "word-choice"
+    }
+  ],
+  "encouragement": "Positive, specific feedback about their English progress"
+}
+
+Guidelines:
+- Focus on errors that improve clarity and naturalness
+- Maximum 3 corrections to avoid overwhelming
+- Provide corrections only for genuine errors, not style preferences
+- Grammar score should be encouraging (70-100 range)
+- Encouragement should be specific and motivating
+- If text is perfect, set hasErrors to false but still give encouragement
+- Explain corrections in simple, learner-friendly language`;
 
       const response = await client.chat.completions.create({
         model: 'gpt-4o',
@@ -134,15 +155,24 @@ Focus on:
       const result = JSON.parse(response.choices[0].message.content || '{}');
       return {
         hasErrors: result.hasErrors || false,
+        correctedText: result.correctedText || userText,
         corrections: result.corrections || [],
-        encouragement: result.encouragement || "Great job practicing English!"
+        encouragement: result.encouragement || "Great job practicing English!",
+        grammarScore: Math.max(70, Math.min(100, result.grammarScore || 85))
       };
     } catch (error) {
       console.error('Error getting correction feedback:', error);
+      // Enhanced fallback with basic error detection
+      const basicErrors = this.detectBasicErrors(userText);
+      
       return {
-        hasErrors: false,
-        corrections: [],
-        encouragement: "Keep practicing! You're doing great!"
+        hasErrors: basicErrors.length > 0,
+        correctedText: basicErrors.length > 0 ? this.applyBasicCorrections(userText) : userText,
+        corrections: basicErrors,
+        encouragement: basicErrors.length === 0 
+          ? "Excellent! Your English is very good. Keep practicing to build confidence!"
+          : `Good effort! I found ${basicErrors.length} area${basicErrors.length > 1 ? 's' : ''} to improve. You're making great progress!`,
+        grammarScore: Math.max(70, 95 - (basicErrors.length * 8))
       };
     }
   }
@@ -291,6 +321,69 @@ Focus on:
   }
 
   // Check if OpenAI is configured
+  // Basic error detection for fallback
+  private detectBasicErrors(text: string): Array<{
+    original: string;
+    corrected: string;
+    explanation: string;
+    type: 'grammar' | 'vocabulary' | 'spelling' | 'word-choice';
+  }> {
+    const errors = [];
+    const lowerText = text.toLowerCase();
+    
+    // Common grammar patterns
+    const patterns = [
+      { find: /\bdon't have no\b/g, replace: "don't have any", type: "grammar", explanation: "Avoid double negatives in English" },
+      { find: /\bhe don't\b/g, replace: "he doesn't", type: "grammar", explanation: "Use 'doesn't' with he/she/it" },
+      { find: /\bshe don't\b/g, replace: "she doesn't", type: "grammar", explanation: "Use 'doesn't' with he/she/it" },
+      { find: /\bit don't\b/g, replace: "it doesn't", type: "grammar", explanation: "Use 'doesn't' with he/she/it" },
+      { find: /\bi are\b/g, replace: "I am", type: "grammar", explanation: "Use 'am' with 'I'" },
+      { find: /\byou is\b/g, replace: "you are", type: "grammar", explanation: "Use 'are' with 'you'" },
+      { find: /\bthere is many\b/g, replace: "there are many", type: "grammar", explanation: "Use 'are' with plural nouns" },
+      { find: /\bmuch people\b/g, replace: "many people", type: "word-choice", explanation: "Use 'many' with countable nouns like 'people'" },
+      { find: /\bmore better\b/g, replace: "better", type: "grammar", explanation: "'Better' is already comparative, don't add 'more'" },
+      { find: /\bvery much like\b/g, replace: "really like", type: "word-choice", explanation: "'Really like' sounds more natural than 'very much like'" }
+    ];
+    
+    patterns.forEach(pattern => {
+      if (pattern.find.test(lowerText)) {
+        const match = text.match(new RegExp(pattern.find.source, 'gi'));
+        if (match) {
+          errors.push({
+            original: match[0],
+            corrected: pattern.replace,
+            explanation: pattern.explanation,
+            type: pattern.type as any
+          });
+        }
+      }
+    });
+    
+    return errors.slice(0, 2); // Limit to 2 corrections
+  }
+  
+  private applyBasicCorrections(text: string): string {
+    let corrected = text;
+    const patterns = [
+      { find: /\bdon't have no\b/gi, replace: "don't have any" },
+      { find: /\bhe don't\b/gi, replace: "he doesn't" },
+      { find: /\bshe don't\b/gi, replace: "she doesn't" },
+      { find: /\bit don't\b/gi, replace: "it doesn't" },
+      { find: /\bi are\b/gi, replace: "I am" },
+      { find: /\byou is\b/gi, replace: "you are" },
+      { find: /\bthere is many\b/gi, replace: "there are many" },
+      { find: /\bmuch people\b/gi, replace: "many people" },
+      { find: /\bmore better\b/gi, replace: "better" },
+      { find: /\bvery much like\b/gi, replace: "really like" }
+    ];
+    
+    patterns.forEach(pattern => {
+      corrected = corrected.replace(pattern.find, pattern.replace);
+    });
+    
+    return corrected;
+  }
+
   isConfigured(): boolean {
     const apiKey = getApiKey();
     const hasKey = !!apiKey && apiKey.length > 10 && apiKey.startsWith('sk-');

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Volume2, Send, RotateCcw, CheckCircle, X, MessageCircle, Bot, User, BookOpen, Settings } from 'lucide-react';
+import { Mic, MicOff, Volume2, Send, RotateCcw, CheckCircle, X, MessageCircle, Bot, User, BookOpen, Settings, ArrowRight, Heart } from 'lucide-react';
 import { speechRecognition, SpeechRecognitionResult } from '../utils/speechRecognition';
 import { openaiService, ChatMessage } from '../utils/openaiService';
 
@@ -22,6 +22,19 @@ interface ConversationMessage {
     type: 'grammar' | 'vocabulary' | 'pronunciation' | 'fluency';
   }>;
   encouragement?: string;
+  autoCorrection?: {
+    originalText: string;
+    correctedText: string;
+    hasErrors: boolean;
+    corrections: Array<{
+      original: string;
+      corrected: string;
+      explanation: string;
+      type: 'grammar' | 'vocabulary' | 'spelling' | 'word-choice';
+    }>;
+    encouragement: string;
+    grammarScore: number;
+  };
 }
 
 const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, onComplete }) => {
@@ -147,16 +160,6 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
   };
 
   const handleUserMessage = async (content: string, isSpoken: boolean = false, confidence?: number) => {
-    const userMessage: ConversationMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content,
-      timestamp: new Date(),
-      isSpoken,
-      confidence
-    };
-
-    setMessages(prev => [...prev, userMessage]);
     setIsProcessing(true);
     
     // Update turn count for scoring
@@ -164,33 +167,46 @@ const ConversationPractice: React.FC<ConversationPracticeProps> = ({ onClose, on
     setTurnCount(newTurnCount);
 
     try {
-      let correctionFeedback = null;
+      let corrections = null;
       
-      // Get correction feedback if enabled and OpenAI is configured
-      if ((showCorrections || autoCorrectEnabled) && openaiService.isConfigured() && content.trim().length > 3) {
+      // Add corrections if auto-correct is enabled
+      if (autoCorrectEnabled) {
         setIsGettingCorrection(true);
         try {
-          const topicTitle = conversationTopics.find(t => t.id === conversationTopic)?.title || 'general conversation';
-          correctionFeedback = await openaiService.getCorrectionFeedback(content, `Conversation about ${topicTitle}`);
+          const correctionFeedback = await openaiService.getCorrectionFeedback(content, `Conversation about ${conversationTopic}`);
+          corrections = correctionFeedback;
         } catch (error) {
           console.error('Error getting corrections:', error);
+          // Fallback correction analysis
+          corrections = {
+            hasErrors: false,
+            correctedText: content,
+            corrections: [],
+            encouragement: "Keep practicing! You're doing great.",
+            grammarScore: 85
+          };
         }
         setIsGettingCorrection(false);
       }
 
-      // Update user message with corrections if available
-      if (correctionFeedback?.hasErrors) {
-        const updatedUserMessage: ConversationMessage = {
-          ...userMessage,
-          corrections: correctionFeedback.corrections,
-          encouragement: correctionFeedback.encouragement
-        };
-        setMessages(prev => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1] = updatedUserMessage;
-          return newMessages;
-        });
-      }
+      const userMessage: ConversationMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content,
+        timestamp: new Date(),
+        isSpoken,
+        confidence,
+        autoCorrection: corrections ? {
+          originalText: content,
+          correctedText: corrections.correctedText || content,
+          hasErrors: corrections.hasErrors,
+          corrections: corrections.corrections || [],
+          encouragement: corrections.encouragement,
+          grammarScore: corrections.grammarScore || 85
+        } : undefined
+      };
+
+      setMessages(prev => [...prev, userMessage]);
 
       // Prepare conversation context for AI (include the new user message)
       const updatedMessages = [...messages, userMessage];
@@ -617,7 +633,7 @@ IMPORTANT: Respond as if you're having a real conversation with a friend, not gi
               </div>
               
               {/* Auto-Corrections Display */}
-              {(showCorrections || autoCorrectEnabled) && message.corrections && message.corrections.length > 0 && (
+              {(showCorrections || autoCorrectEnabled) && message.role === 'user' && message.autoCorrection && (
                 <div className="mt-2 mr-0 ml-auto max-w-xs lg:max-w-md">
                   <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3 shadow-sm">
                     <div className="flex items-center space-x-2 mb-2">
