@@ -37,7 +37,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showInteractiveLessons, setShowInteractiveLessons] = useState(false);
   const [showConversationPractice, setShowConversationPractice] = useState(false);
   const [showFillInTheBlanks, setShowFillInTheBlanks] = useState(false);
-  const [showPronunciationTrainer, setShowPronunciationTrainer] = useState(false);
 
   const completionRate = Math.round((userProgress.completedLessons / userProgress.totalLessons) * 100);
   const dailyProgress = Math.round((userProgress.lessonsToday / userProgress.dailyGoal) * 100);
@@ -66,10 +65,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     setShowFillInTheBlanks(false);
   };
 
-  const handlePronunciationTrainerComplete = (score: number) => {
-    console.log(`Pronunciation training completed with score: ${score}`);
-    setShowPronunciationTrainer(false);
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -341,7 +337,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </button>
             
             <button 
-              onClick={() => setShowPronunciationTrainer(true)}
+              onClick={onShowPronunciationTrainer}
               className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105"
             >
               <Volume2 className="w-8 h-8 mb-2" />
@@ -439,12 +435,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         />
       )}
 
-      {showPronunciationTrainer && (
-        <PerfectPronunciationTrainer 
-          onClose={() => setShowPronunciationTrainer(false)}
-          onComplete={handlePronunciationTrainerComplete}
-        />
-      )}
+
     </div>
   );
 };
