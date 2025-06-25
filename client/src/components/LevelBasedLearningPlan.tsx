@@ -81,7 +81,8 @@ const LevelBasedLearningPlan: React.FC<LevelBasedLearningPlanProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl shadow-2xl m-4">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -425,6 +426,7 @@ const LevelBasedLearningPlan: React.FC<LevelBasedLearningPlanProps> = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
