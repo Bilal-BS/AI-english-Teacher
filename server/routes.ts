@@ -6,6 +6,7 @@ import { getCorrectedConversation } from './openaiService';
 
 import { analyzeErrorsComprehensively, getDynamicConversationResponse } from './advancedErrorDetection';
 import { analyzeSpeechComprehensively } from './advancedSpeechAnalysis';
+import { analyzeConversationErrors, generateWhatsAppStyleResponse } from './conversationErrorDetection';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Advanced error analysis route
@@ -23,6 +24,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error analysis failed:", error);
       res.status(500).json({ 
         error: "Failed to analyze errors",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // WhatsApp-style conversation with error detection
+  app.post("/api/conversation-practice", async (req, res) => {
+    try {
+      const { userInput, conversationHistory, userLevel = 'beginner', whatsappStyle = true } = req.body;
+      
+      if (!userInput) {
+        return res.status(400).json({ error: "User input is required" });
+      }
+
+      const corrections = await analyzeConversationErrors(
+        userInput, 
+        conversationHistory || [], 
+        userLevel
+      );
+
+      if (whatsappStyle) {
+        const response = await generateWhatsAppStyleResponse(
+          userInput,
+          corrections,
+          conversationHistory || []
+        );
+        
+        res.json({
+          ...corrections,
+          whatsappResponse: response
+        });
+      } else {
+        res.json(corrections);
+      }
+    } catch (error) {
+      console.error("Conversation practice error:", error);
+      res.status(500).json({ 
+        error: "Failed to process conversation",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }

@@ -7,7 +7,7 @@ import AchievementBadge from './AchievementBadge';
 import CommunitySupport from './CommunitySupport';
 import PersonalizedGoals from './PersonalizedGoals';
 import InteractiveLessons from './InteractiveLessons';
-import EnhancedConversationPractice from './EnhancedConversationPractice';
+import WhatsAppConversationPractice from './WhatsAppConversationPractice';
 import FillInTheBlanks from './FillInTheBlanks';
 import PerfectPronunciationTrainer from './PerfectPronunciationTrainer';
 
@@ -422,7 +422,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       )}
 
       {showConversationPractice && (
-        <EnhancedConversationPractice
+        <WhatsAppConversationPractice
           onClose={() => setShowConversationPractice(false)}
           onComplete={handleConversationComplete}
         />
