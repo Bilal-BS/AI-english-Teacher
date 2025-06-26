@@ -233,30 +233,32 @@ export async function analyzeConversationErrors(
   conversationHistory: any[] = [],
   userLevel: 'beginner' | 'intermediate' | 'advanced' = 'beginner'
 ): Promise<ConversationCorrection> {
-  // First, try pattern-based detection for instant feedback
-  const patternErrors = detectPatternErrors(userInput);
-  
   try {
-    // Enhanced AI analysis for conversational context
-    const aiAnalysis = await performConversationAI(userInput, conversationHistory, userLevel, patternErrors);
+    // Prioritize OpenAI for comprehensive analysis like ChatGPT
+    const aiAnalysis = await performConversationAI(userInput, conversationHistory, userLevel, []);
     
     return {
-      hasErrors: patternErrors.length > 0 || aiAnalysis.hasErrors,
-      correctedText: aiAnalysis.correctedText || applyCorrectionToText(userInput, patternErrors),
-      errors: [...patternErrors, ...(aiAnalysis.errors || [])],
+      hasErrors: aiAnalysis.hasErrors,
+      correctedText: aiAnalysis.correctedText,
+      errors: aiAnalysis.errors || [],
       conversationReply: aiAnalysis.conversationReply,
-      encouragement: generateEncouragement(patternErrors, userLevel),
-      confidence: aiAnalysis.confidence || 0.9
+      encouragement: aiAnalysis.encouragement || "Great job practicing English!",
+      confidence: aiAnalysis.confidence || 0.95
     };
   } catch (error) {
-    // Fallback to pattern-only analysis
+    console.warn('OpenAI analysis failed, falling back to pattern detection:', error);
+    
+    // Fallback to pattern-based detection only if OpenAI fails
+    const patternErrors = detectPatternErrors(userInput);
+    const correctedText = patternErrors.length > 0 ? applyCorrectionToText(userInput, patternErrors) : userInput;
+    
     return {
       hasErrors: patternErrors.length > 0,
-      correctedText: applyCorrectionToText(userInput, patternErrors),
+      correctedText,
       errors: patternErrors,
       conversationReply: generateFallbackReply(userInput, patternErrors),
       encouragement: generateEncouragement(patternErrors, userLevel),
-      confidence: 0.8
+      confidence: 0.7
     };
   }
 }
@@ -305,48 +307,80 @@ async function performConversationAI(
   errors: ConversationError[];
   conversationReply: string;
   confidence: number;
+  encouragement?: string;
 }> {
-  const prompt = `You are an English conversation partner like in WhatsApp. The user said: "${userInput}"
+  try {
+    const historyContext = conversationHistory.length > 0 
+      ? `\n\nConversation history (last few messages): ${JSON.stringify(conversationHistory.slice(-4))}`
+      : '';
 
-Your job:
-1. Find ALL grammar, spelling, and conversation errors (especially missing apostrophes like "Im" → "I'm")
-2. Provide natural conversation responses
-3. Be encouraging but correct mistakes
+    const prompt = `You are an intelligent English conversation partner like ChatGPT. Analyze this message: "${userInput}"
 
-Detected pattern errors: ${JSON.stringify(patternErrors)}
+Your tasks:
+1. COMPREHENSIVE GRAMMAR ANALYSIS: Check for ALL errors including:
+   - Missing apostrophes (Im → I'm, dont → don't, cant → can't)
+   - Spelling mistakes
+   - Grammar errors (verb tenses, subject-verb agreement)
+   - Punctuation and capitalization
+   - Sentence structure issues
+
+2. NATURAL CONVERSATION: Provide a relevant, engaging response that:
+   - Responds naturally to what the user said
+   - Continues the conversation like a real person
+   - Shows understanding of their message
+   - Asks follow-up questions when appropriate
+
+3. HELPFUL FEEDBACK: Be encouraging while being thorough about corrections
+
+User level: ${userLevel}${historyContext}
 
 Respond in JSON format:
 {
   "hasErrors": true/false,
-  "correctedText": "corrected version of user input",
+  "correctedText": "fully corrected version with ALL fixes applied",
   "errors": [
     {
-      "original": "exact error text",
-      "corrected": "fixed version", 
-      "explanation": "brief explanation like 'Added apostrophe in I'm - it's short for I am'",
-      "type": "contraction|spelling|grammar|punctuation",
+      "original": "exact error found",
+      "corrected": "fixed version",
+      "explanation": "clear explanation of the error and why it was corrected",
+      "type": "contraction|spelling|grammar|punctuation|capitalization",
       "severity": "high|medium|low"
     }
   ],
-  "conversationReply": "natural response to continue conversation",
+  "conversationReply": "natural, engaging response that continues the conversation and shows understanding",
+  "encouragement": "brief encouraging note about their English progress",
   "confidence": 0.95
 }`;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: "You are a friendly English teacher who corrects errors and continues conversations naturally, like in WhatsApp chats."
-      },
-      ...conversationHistory.slice(-4),
-      { role: "user", content: prompt }
-    ],
-    temperature: 0.3,
-    response_format: { type: "json_object" }
-  });
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert English teacher and conversation partner. You provide comprehensive grammar analysis like Grammarly, then engage in natural conversation like ChatGPT. Always be thorough in finding errors but encouraging in your responses."
+        },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+      response_format: { type: "json_object" }
+    });
 
-  return JSON.parse(response.choices[0].message.content || '{}');
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    
+    // Ensure we have all required fields
+    return {
+      hasErrors: result.hasErrors || false,
+      correctedText: result.correctedText || userInput,
+      errors: result.errors || [],
+      conversationReply: result.conversationReply || generateFallbackReply(userInput, []),
+      confidence: result.confidence || 0.9,
+      encouragement: result.encouragement || "Great job practicing English!"
+    };
+
+  } catch (error) {
+    console.error('OpenAI conversation analysis failed:', error);
+    throw error;
+  }
 }
 
 function applyCorrectionToText(text: string, errors: ConversationError[]): string {

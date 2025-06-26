@@ -11,6 +11,7 @@ import WhatsAppConversationPractice from './WhatsAppConversationPractice';
 import LevelBasedConversationPractice from './LevelBasedConversationPractice';
 import FillInTheBlanks from './FillInTheBlanks';
 import PerfectPronunciationTrainer from './PerfectPronunciationTrainer';
+import AdvancedEnglishLessons from './AdvancedEnglishLessons';
 
 interface DashboardProps {
   userProgress: UserProgress;
@@ -39,6 +40,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showConversationPractice, setShowConversationPractice] = useState(false);
   const [showLevelConversation, setShowLevelConversation] = useState(false);
   const [showFillInTheBlanks, setShowFillInTheBlanks] = useState(false);
+  const [showAdvancedLessons, setShowAdvancedLessons] = useState(false);
 
   const completionRate = Math.round((userProgress.completedLessons / userProgress.totalLessons) * 100);
   const dailyProgress = Math.round((userProgress.lessonsToday / userProgress.dailyGoal) * 100);
@@ -300,20 +302,29 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
             <div className="ml-8">
-              <button
-                onClick={() => {
-                  console.log('Start Mastery Journey button clicked');
-                  if (onShowPlan) {
-                    onShowPlan();
-                  } else {
-                    console.error('onShowPlan handler is not defined');
-                  }
-                }}
-                className="bg-white text-purple-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
-              >
-                <Map className="w-5 h-5" />
-                <span>Start Mastery Journey</span>
-              </button>
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={() => setShowAdvancedLessons(true)}
+                  className="bg-white text-purple-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                >
+                  <BookOpen className="w-5 h-5" />
+                  <span>30-Day Advanced Lessons</span>
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('Start Mastery Journey button clicked');
+                    if (onShowPlan) {
+                      onShowPlan();
+                    } else {
+                      console.error('onShowPlan handler is not defined');
+                    }
+                  }}
+                  className="bg-purple-700 text-white px-8 py-3 rounded-xl font-medium hover:bg-purple-800 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+                >
+                  <Map className="w-5 h-5" />
+                  <span>Start Mastery Journey</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -444,6 +455,11 @@ const Dashboard: React.FC<DashboardProps> = ({
         />
       )}
 
+      {showAdvancedLessons && (
+        <AdvancedEnglishLessons
+          onClose={() => setShowAdvancedLessons(false)}
+        />
+      )}
 
     </div>
   );
