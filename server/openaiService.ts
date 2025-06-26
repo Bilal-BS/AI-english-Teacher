@@ -1,12 +1,17 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: OpenAI | null = null;
+
+// Initialize OpenAI client only if API key is available
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 export async function getCorrectedConversation(userInput: string, conversationHistory: any[] = []) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OpenAI API key not configured');
+  if (!process.env.OPENAI_API_KEY || !openai) {
+    throw new Error('OpenAI API key not configured. Please add your OPENAI_API_KEY to the Secrets tab in Replit.');
   }
 
   const prompt = `Correct this English sentence and reply like a teacher. Show correction and explain changes.
