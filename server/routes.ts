@@ -7,6 +7,7 @@ import { getCorrectedConversation } from './openaiService';
 import { analyzeErrorsComprehensively, getDynamicConversationResponse } from './advancedErrorDetection';
 import { analyzeSpeechComprehensively } from './advancedSpeechAnalysis';
 import { analyzeConversationErrors, generateWhatsAppStyleResponse } from './conversationErrorDetection';
+import { checkGrammarWithFreeAPIs, generateLevelBasedResponse } from './freeGrammarAPIs';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Advanced error analysis route
@@ -24,6 +25,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error analysis failed:", error);
       res.status(500).json({ 
         error: "Failed to analyze errors",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Free Grammar API with level-based conversation
+  app.post("/api/level-conversation", async (req, res) => {
+    try {
+      const { userInput, userLevel = 'beginner', conversationHistory = [] } = req.body;
+      
+      if (!userInput) {
+        return res.status(400).json({ error: "User input is required" });
+      }
+
+      // Use free grammar APIs with fallback
+      const grammarResult = await checkGrammarWithFreeAPIs(userInput, userLevel);
+      
+      // Generate level-appropriate response
+      const levelResponse = await generateLevelBasedResponse(
+        userInput,
+        grammarResult,
+        userLevel,
+        conversationHistory
+      );
+
+      res.json({
+        originalText: grammarResult.originalText,
+        correctedText: grammarResult.correctedText,
+        hasErrors: grammarResult.hasErrors,
+        errors: grammarResult.errors,
+        confidence: grammarResult.confidence,
+        explanation: levelResponse.explanation,
+        conversationReply: levelResponse.conversationReply,
+        grammarScore: levelResponse.grammarScore,
+        userLevel: levelResponse.level,
+        suggestions: grammarResult.suggestions
+      });
+    } catch (error) {
+      console.error("Level conversation error:", error);
+      res.status(500).json({ 
+        error: "Failed to process level conversation",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }

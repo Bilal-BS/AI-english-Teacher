@@ -8,6 +8,7 @@ import CommunitySupport from './CommunitySupport';
 import PersonalizedGoals from './PersonalizedGoals';
 import InteractiveLessons from './InteractiveLessons';
 import WhatsAppConversationPractice from './WhatsAppConversationPractice';
+import LevelBasedConversationPractice from './LevelBasedConversationPractice';
 import FillInTheBlanks from './FillInTheBlanks';
 import PerfectPronunciationTrainer from './PerfectPronunciationTrainer';
 
@@ -36,6 +37,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showGoals, setShowGoals] = useState(false);
   const [showInteractiveLessons, setShowInteractiveLessons] = useState(false);
   const [showConversationPractice, setShowConversationPractice] = useState(false);
+  const [showLevelConversation, setShowLevelConversation] = useState(false);
   const [showFillInTheBlanks, setShowFillInTheBlanks] = useState(false);
 
   const completionRate = Math.round((userProgress.completedLessons / userProgress.totalLessons) * 100);
@@ -418,6 +420,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         <InteractiveLessons
           onClose={() => setShowInteractiveLessons(false)}
           onStartLesson={handleStartInteractiveLesson}
+        />
+      )}
+
+      {showLevelConversation && (
+        <LevelBasedConversationPractice
+          onClose={() => setShowLevelConversation(false)}
+          onComplete={handleConversationComplete}
         />
       )}
 

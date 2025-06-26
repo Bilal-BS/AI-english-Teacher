@@ -1,0 +1,128 @@
+Perfect! Let's upgrade your project with English-level conversation practice, including:
+
+✅ Phase 1: Core Features
+You already want:
+
+🔁 Interactive conversation flow
+
+📝 Grammar correction
+
+💡 Simple explanation
+
+🧠 Adaptive English level logic (Beginner, Intermediate, Advanced)
+
+✅ Phase 2: Add Level-based Behavior
+We’ll allow the user to choose their English level, and the AI will:
+
+Use simpler corrections and questions for Beginners
+
+Use moderate corrections and conversation for Intermediate
+
+Push advanced grammar, vocabulary, and logic for Advanced
+
+🛠️ Update index.js to support levels
+js
+Copy
+Edit
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const { OpenAI } = require("openai");
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+app.post("/conversation", async (req, res) => {
+  const { message, level } = req.body;
+
+  const prompt = `
+You are an English tutor helping a student improve their conversation skills.
+
+The student level is: ${level}
+
+The student said: "${message}"
+
+Your response must include:
+✅ Correction: <corrected sentence>
+💡 Explanation: <why it's wrong and how to fix it — ${level} level>
+🗣️ Next question: <continue the conversation naturally for ${level} learner>
+`;
+
+  const result = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  res.json({ reply: result.choices[0].message.content });
+});
+
+app.listen(3000, () => console.log("Running on http://localhost:3000"));
+🧠 Update frontend.html – Add level selector
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI English Level Conversation</title>
+</head>
+<body>
+  <h2>Practice English Conversation by Level</h2>
+
+  <label for="level">Choose Level:</label>
+  <select id="level">
+    <option>Beginner</option>
+    <option>Intermediate</option>
+    <option>Advanced</option>
+  </select><br><br>
+
+  <textarea id="userInput" rows="3" cols="50" placeholder="Type your sentence..."></textarea><br>
+  <button onclick="send()">Send</button>
+  <pre id="responseBox"></pre>
+
+  <script>
+    async function send() {
+      const input = document.getElementById("userInput").value;
+      const level = document.getElementById("level").value;
+
+      const res = await fetch("http://localhost:3000/conversation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input, level: level })
+      });
+
+      const data = await res.json();
+      document.getElementById("responseBox").textContent = data.reply;
+    }
+  </script>
+</body>
+</html>
+✅ Example Outputs by Level
+Input: i go school
+Beginner:
+
+rust
+Copy
+Edit
+✅ Correction: I went to school.
+💡 Explanation: "go" becomes "went" for past tense. "I" should be capital.
+🗣️ What did you do at school?
+Intermediate:
+
+vbnet
+Copy
+Edit
+✅ Correction: I went to school.
+💡 Explanation: Use simple past "went" for past actions.
+🗣️ Did you go by bus or walk?
+Advanced:
+
+vbnet
+Copy
+Edit
+✅ Correction: I went to school.
+💡 Explanation: "Go" is present; in past we use "went". Let's focus on sentence structure.
+🗣️ What kind of classes did you attend, and which one was your favorite?
