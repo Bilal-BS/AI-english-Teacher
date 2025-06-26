@@ -1,3 +1,83 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Comprehensive Responsive Design System for English Learning App */
+@layer utilities {
+  /* Modal responsiveness */
+  .modal-responsive {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4 z-50;
+  }
+  
+  .modal-content-responsive {
+    @apply bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl max-h-[95vh] overflow-hidden;
+  }
+
+  /* Conversation specific responsiveness */
+  .conversation-container {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center p-1 sm:p-2 md:p-4 z-50;
+  }
+  
+  .conversation-modal {
+    @apply bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl w-full h-full sm:h-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl sm:max-h-[95vh] flex flex-col overflow-hidden;
+  }
+  
+  .conversation-header {
+    @apply p-3 sm:p-4 lg:p-6 border-b border-gray-200 dark:border-gray-600 flex-shrink-0;
+  }
+  
+  .conversation-messages {
+    @apply flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4;
+  }
+  
+  .conversation-input {
+    @apply p-3 sm:p-4 lg:p-6 border-t border-gray-200 dark:border-gray-600 flex-shrink-0;
+  }
+  
+  .message-bubble {
+    @apply max-w-[90%] sm:max-w-[80%] lg:max-w-[75%] rounded-2xl p-3 sm:p-4 shadow-sm;
+  }
+
+  /* Button and input responsiveness */
+  .btn-responsive {
+    @apply px-3 py-2 sm:px-4 sm:py-2.5 lg:px-6 lg:py-3 text-sm sm:text-base rounded-lg transition-all;
+  }
+  
+  .input-responsive {
+    @apply w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white;
+  }
+
+  /* Dashboard responsiveness */
+  .dashboard-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+  }
+  
+  .dashboard-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-700 p-4 sm:p-6 transition-all hover:scale-105;
+  }
+
+  /* Touch-friendly elements */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+  
+  .touch-button {
+    @apply min-h-[48px] px-4 py-3 touch-manipulation select-none;
+  }
+}
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  .conversation-modal {
+    border-radius: 0;
+    height: 100vh;
+    max-height: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .conversation-modal {
+    height: auto;
+    max-height: 90vh;
+  }
+}

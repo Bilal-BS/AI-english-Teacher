@@ -4,7 +4,55 @@ import { storage } from "./storage";
 
 import { getCorrectedConversation } from './openaiService';
 
+import { analyzeErrorsComprehensively, getDynamicConversationResponse } from './advancedErrorDetection';
+import { analyzeSpeechComprehensively } from './advancedSpeechAnalysis';
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Advanced error analysis route
+  app.post("/api/analyze-errors", async (req, res) => {
+    try {
+      const { text, userLevel = 'beginner' } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: "Text is required for analysis" });
+      }
+
+      const analysis = await analyzeErrorsComprehensively(text, userLevel);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error analysis failed:", error);
+      res.status(500).json({ 
+        error: "Failed to analyze errors",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Dynamic conversation route
+  app.post("/api/dynamic-conversation", async (req, res) => {
+    try {
+      const { userInput, conversationHistory, userLevel = 'beginner', topic = 'general' } = req.body;
+      
+      if (!userInput) {
+        return res.status(400).json({ error: "User input is required" });
+      }
+
+      const result = await getDynamicConversationResponse(
+        userInput, 
+        conversationHistory || [], 
+        userLevel, 
+        topic
+      );
+      res.json(result);
+    } catch (error) {
+      console.error("Dynamic conversation error:", error);
+      res.status(500).json({ 
+        error: "Failed to process conversation",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // OpenAI conversation route
   app.post('/api/conversation', async (req, res) => {
     try {
